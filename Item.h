@@ -1,15 +1,39 @@
 #ifndef ITEM_H
 #define ITEM_H
 
+#include <string>
+
 namespace RPG_Colaborate
 {
     class Item
     {
     private:
-        /* data */
+        std::string name;
+        std::string type;
+        int effectValue;
+        int quantity;
+
     public:
-        Item(/* args */);
+        // 建構子
+        Item(std::string name, std::string type, int effectValue, int quantity);
         ~Item();
+
+        // Getters
+        std::string getName() const;
+        std::string getType() const;
+        int getEffectValue() const;
+        int getQuantity() const;
+
+        // Setters
+        void setName(const std::string& newName);
+        void setType(const std::string& newType);
+        void setEffectValue(int newValue);
+        void setQuantity(int newQuantity);
+
+        // 使用道具之類的
+        void use();
+        void showInfo() const;
+        bool isAvailable() const;
     };
 }
 
