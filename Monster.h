@@ -10,6 +10,10 @@ namespace RPG_Colaborate
     public:
         Monster(/* args */);
         ~Monster();
+
+        void takeDamage(int damage) {
+            std::cout << "[測試用] 怪物受到了 " << damage << " 點傷害！\n";
+        }
     };
 }
 
