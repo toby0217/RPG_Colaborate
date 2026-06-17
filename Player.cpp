@@ -3,115 +3,120 @@
 #include "Skill.h"
 #include "Monster.h"
 #include <iostream>
-
+using std::cout;
+using std::endl;
 
 namespace RPG_Colaborate
 {
     // Constructor
-    Player::Player(std::string name, int maxHp, int maxMp, int attackPower) 
+    Player::Player(string name, int maxHp, int maxMp, int attackPower) 
     : name(name), maxHp(maxHp), hp(maxHp), maxMp(maxMp), mp(maxMp), attackPower(attackPower) {}
 
     // Destructor
     Player::~Player() {}
 
-    // Getters and Setters
-    std::string Player::getName() const { return name; }
+    //getters
+    string Player::getName() const { return name; }
     int Player::getHp() const { return hp; }
     int Player::getMaxHp() const { return maxHp; }
     int Player::getAttackPower() const { return attackPower; }
-
     int Player::getMp() const { return mp; }
     int Player::getMaxMp() const { return maxMp; }
 
-    bool Player::consumeMp(int amount) {
-        if (mp >= amount) {
-            mp -= amount;
-            std::cout << name << " consumed " << amount << " MP! (remaining MP: " << mp << ")\n";
+    //setters
+    void Player::setName(string newName) { name = newName; }
+    void Player::setHp(int newHp)
+    {
+        hp = newHp;
+        if (hp < 0) hp = 0; // Prevent negative HP
+    }
+    void Player::setMaxHp(int newMaxHp) { maxHp = newMaxHp; }
+    void Player::setAttackPower(int newAttackPower) { attackPower = newAttackPower; }
+    void Player::setMp(int newMp) { mp = newMp; }
+    void Player::setMaxMp(int newMaxMp) { maxMp = newMaxMp; }
+
+    bool Player::consumeMp(int cost) {
+        if (mp >= cost) {
+            //mp -= cost;
+            //std::cout << name << " consumed " << cost << " MP! (remaining MP: " << mp << ")\n";
             return true;
-        } else {
-            std::cout << name << " insufficient MP! Cannot perform skill!\n";
+        }
+        else {
+            cout << name << " insufficient MP! Cannot perform skill!" << endl;
             return false;
         }
     }
 
-        // 1. Basic Attack
+    // 1. Basic Attack(已調整)
+    // 發動普攻，然後怪物受到傷害
     void Player::attack(Monster& target) {
-        std::cout << name << " performs a basic attack!" << std::endl;
-        
-        // TODO: Call target.takeDamage() depending on Monster's implementation
-        // Example: target.takeDamage(this->attackPower);
+        cout << name << " performs a basic attack!" << endl;
+        target.takeDamage(attackPower);
     }
 
-    // 2. Take Damage
+    // 2. Take Damage (受到傷害)(已調整)
+    // 減少生命值，若沒有存活則彈出死亡播報
     void Player::takeDamage(int damage) {
         hp -= damage;
         if (hp < 0) {
             hp = 0; // Prevent HP from dropping below zero
         }
-        std::cout << name << " takes " << damage << " points of damage! " 
-                << "(Current HP: " << hp << "/" << maxHp << ")" << std::endl;
+        cout << name << " takes " << damage << " points of damage! " 
+                << "(Current HP: " << hp << "/" << maxHp << ")" << endl;
                 
-        if (hp == 0) {
-            std::cout << name << " has been defeated..." << std::endl;
+        if (!isAlive()) {
+            cout << name << " has been defeated..." << endl;
         }
     }
-    
-    void Player::setHp(int newHp) {
-        hp = newHp;
-        if (hp < 0) hp = 0; // Prevent negative HP
-    }
-    void Player::setAttackPower(int newAttack) { attackPower = newAttack; }
 
-    // 3. Use Item (使用道具)
-    void Player::useItem(Item& item) {
-        // 檢查道具是否還有剩
-        if (!item.isAvailable()) {
-            std::cout << name << " tries to use [" << item.getName() << "], but it's empty!" << std::endl;
-            return;
+    // 3. Use Item (使用道具)(已調整)
+    bool Player::useItem(int itemCode) {
+        // 檢查道具代碼是否合法
+        auto it = items.find(itemCode);
+        if (it == items.end()) {
+            cout << "No this item." << endl;
+            return false;
         }
 
-        std::cout << name << " uses an item: [" << item.getName() << "]!" << std::endl;
-
-        // 根據道具類型來決定效果 (假設 "Heal" 類型是補血)
-        if (item.getType() == "Heal") {
-            int healAmount = item.getEffectValue();
-            hp += healAmount;
-            
-            // 確保補血不會超過最大血量
-            if (hp > maxHp) {
-                hp = maxHp;
+        Item theItem = items[itemCode];
+        // 檢查道具是否能使用，以及數量是否>0
+        if (!theItem.isAvailable()) {
+            cout << "Failed to use this item." << endl;
+            if (theItem.getQuantity() <= 0) {
+                cout << "Not enough items in package." << endl;
             }
-            std::cout << name << " recovers " << healAmount << " HP! "
-                    << "(Current HP: " << hp << "/" << maxHp << ")" << std::endl;
+            return false;
         }
 
-        // 呼叫道具本身的 use()，讓它自己去把 quantity (數量) 扣掉 1
-        item.use(); 
+        // 使用道具
+        cout << name << " uses an item: [" << theItem.getName() << "]!" << endl;
+        theItem.use();
+        return true;
     }
 
-    // 4. Use Skill (使用技能)
-    void Player::useSkill(Skill& skill, Monster& target) {
-        int cost = skill.getMpCost();
+    // 4. Use Skill (使用技能)(已調整)
+    bool Player::useSkill(int skillNumber, Monster& target) {
+        // 計畫:加入技能庫，選擇技能施放
+        // 呼叫該技能的use函式
+        if (skillNumber >= 1 && skillNumber < 4) {
+            if (consumeMp(skillbox[skillNumber-1]->getMpCost())) {
+                // 消耗魔力施放技能
+                skillbox[skillNumber-1]->use(*this, target);
+                return true;
+            }
+            // 魔力不足，回傳false
+            return false;
+        }
 
-        // 呼叫我們之前寫好的 consumeMp，如果魔力夠就會自動扣除並回傳 true
-        if (this->consumeMp(cost)) {
-            std::cout << name << " casts a skill: [" << skill.getName() << "]!" << std::endl;
-            
-            // 回應隊友的註解：我們可以把 Player 的攻擊力與技能傷害結合
-            // 這裡示範「角色攻擊力 + 技能額外傷害」的算法，若隊友改成倍率也可以輕鬆改成相乘
-            int totalDamage = this->attackPower + skill.getDamage();
-            
-            std::cout << "The skill deals a total of " << totalDamage << " damage!" << std::endl;
-            
-            // 真正讓怪物扣血
-            target.takeDamage(totalDamage);
-
-            // 呼叫技能本身的 use()，也許隊友以後會在這裡加上特效文字
-            skill.use();
-        } 
-        // 如果魔力不夠，consumeMp 裡面已經會印出失敗訊息了，所以這裡不用寫 else
+        // skillnumber輸入錯誤，回傳false
+        cout << "The skill does not exist." << endl;
+        return false;
     }
 
-    
+    // 5. isAlive (確認存活)(已調整)
+    bool Player::isAlive()
+    {
+        return hp > 0;
+    }
 }
     

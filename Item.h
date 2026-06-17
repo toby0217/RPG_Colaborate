@@ -2,31 +2,32 @@
 #define ITEM_H
 
 #include <string>
+using std::string;
 
 namespace RPG_Colaborate
 {
     class Item
     {
     private:
-        std::string name;
-        std::string type;
+        string name;
+        string type;
         int effectValue;
         int quantity;
 
     public:
         // 建構子
-        Item(std::string name, std::string type, int effectValue, int quantity);
+        Item(string name, string type, int effectValue, int quantity);
         ~Item();
 
         // Getters
-        std::string getName() const;
-        std::string getType() const;
+        string getName() const;
+        string getType() const;
         int getEffectValue() const;
         int getQuantity() const;
 
         // Setters
-        void setName(const std::string& newName);
-        void setType(const std::string& newType);
+        void setName(const string& newName);
+        void setType(const string& newType);
         void setEffectValue(int newValue);
         void setQuantity(int newQuantity);
 

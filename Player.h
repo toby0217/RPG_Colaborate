@@ -2,7 +2,9 @@
 #define PLAYER_H
 
 #include <string>
-#include <vector>
+#include <map>
+using std::string;
+using std::map;
 
 namespace RPG_Colaborate
 {
@@ -15,34 +17,42 @@ namespace RPG_Colaborate
     {
     private:
         /* Basic attributes */
-        std::string name;
+        string name;
         int hp;
         int maxHp;
         int attackPower;
         int mp;
         int maxMp;
+        map<int, Item> items;
+        Skill* skillbox[3];
     public:
-        Player(std::string name, int maxHp, int maxMp, int attackPower);
+        Player(string name, int maxHp, int maxMp, int attackPower);
         ~Player();
 
-        // Getters and Setters
-        std::string getName() const;
+        // Getters
+        string getName() const;
         int getHp() const;
         int getMaxHp() const;
         int getAttackPower() const;
-
         int getMp() const;
         int getMaxMp() const;
+
+        // Setters
+        void setName(string mewName);
         void setHp(int newHp);
+        void setMaxHp(int newMaxHp);
         void setAttackPower(int newAttack);
+        void setMp(int newMp);
+        void setMaxMp(int newMaxMp);
 
         bool consumeMp(int amount);
 
         // Core combat and interaction actions
         void attack(Monster& target);
         void takeDamage(int damage);
-        void useItem(Item& item);
-        void useSkill(Skill& skill, Monster& target);
+        bool useItem(int itemCode);
+        bool useSkill(int skillNumber, Monster& target);
+        bool isAlive();
     };
 }
 
