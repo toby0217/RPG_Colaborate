@@ -27,10 +27,10 @@ namespace RPG_Colaborate
 
 
         //setter
-        void setName(const std::string& name);
-        void setHp(int hp);
-        void setAttackPower(int attackPower);
-        void setRewardGold(int rewardGold);
+        void setName(const std::string& newName);
+        void setHp(int newHp);
+        void setAttackPower(int newAttackPower);
+        void setRewardGold(int newRewardGold);
 
 
         //function
