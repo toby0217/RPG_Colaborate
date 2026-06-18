@@ -14,7 +14,7 @@ namespace RPG_Colaborate
     name("monster"), hp(100), attackPower(10), rewardGold(10), evadeRate(0), defense(0) {}
 
     //建構子
-    Monster::Monster(const string& name,int hp,int attackPower,int rewardGold,int evadeRate,double defense):
+    Monster::Monster(const string& name,int hp,int attackPower,int rewardGold,int evadeRate,int defense):
     name(name), hp(hp), attackPower(attackPower), rewardGold(rewardGold), evadeRate(evadeRate), defense(defense) {}
 
     //getters
@@ -22,36 +22,36 @@ namespace RPG_Colaborate
     int Monster::getHp() const { return hp; }
     int Monster::getAttackPower() const { return attackPower; }
     int Monster::getRewardGold() const { return rewardGold; }
-    int Monster::getEvadeRate()const { return evadeRate; }
-    double Monster::getDefense()const { return defense; }
+    int Monster::getEvadeRate() const { return evadeRate; }
+    int Monster::getDefense() const { return defense; }
 
     //setters
     void Monster::setName(const string& newName) { name = newName; }
-    void Monster::setHp(int newHp) { hp = newHp; }
-    void Monster::setRewardGold(int newRewardGold) { rewardGold = newRewardGold; }
-    void Monster::setAttackPower(int newAttackPower) { attackPower = newAttackPower; }
-    void Monster::setEvadeRate(int newEvadeRate){ evadeRate = newEvadeRate; }
-    void Monster::setDefense(double newDefense){ defense = newDefense; }
+    void Monster::setHp(int newHp) {
+        hp = newHp;
+
+    }
+    void Monster::setRewardGold(int newRewardGold) {
+        if (newRewardGold >= 0) {
+            rewardGold = newRewardGold;
+        }
+    }
+    void Monster::setAttackPower(int newAttackPower) {
+        if (newAttackPower >= 0) {
+            attackPower = newAttackPower;
+        }
+    }
+    void Monster::setEvadeRate(int newEvadeRate) { evadeRate = newEvadeRate; }
+    void Monster::setDefense(int newDefense) { defense = newDefense; }
 
     //function
-    //攻擊我先用作業的方法
-    //留:待新增怪物再調整
     void Monster::attack(Player& player) const
     {
-        int damage;
-        if(attackPower>0) {
-            damage = rand()%attackPower + 1;
-            //傷害1~attack power隨機
-        }
-        else{
-            damage = 0;
-            //防止attackPower <= 0時出問題
-        }
-
-        cout<<name<<" attack "<<player.getName()<<" deal "<<damage<<" damage."<<endl;
+        //已調整:直接依照攻擊力造成傷害
+        cout<<name<<" launch an attack!"<<endl;
         //這裡會輸出訊息
 
-        player.takeDamage(damage);
+        player.takeDamage(attackPower);
     }
 
     //這裡我對應player.cpp寫的，保持邏輯一致
@@ -59,7 +59,7 @@ namespace RPG_Colaborate
     void Monster::takeDamage(int damage){
         if(evadeRate > 0){
             if(rand()%100 < evadeRate){
-                cout<<name<<" evade attack."<<std::endl;
+                cout<<name<<" evade attack!"<<endl;
                 return;
                 //結束function
             }

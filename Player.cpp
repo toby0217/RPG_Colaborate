@@ -3,25 +3,30 @@
 #include "Skill.h"
 #include "Monster.h"
 #include <iostream>
+#include <cmath>
 using std::cout;
 using std::endl;
 
 namespace RPG_Colaborate
 {
-    // Constructor
-    Player::Player(string name, int maxHp, int maxMp, int attackPower) 
-    : name(name), maxHp(maxHp), hp(maxHp), maxMp(maxMp), mp(maxMp), attackPower(attackPower) {}
+    // Constructors
+    Player::Player()
+    : name("Player"), job("Unknown"), maxHp(1000), hp(maxHp), maxMp(100), mp(maxMp), attackPower(100) {}
+    Player::Player(string theName, int theMaxHp, int theMaxMp, int theAttackPower, int theDefense) 
+    : name(theName), job("Unknown"), maxHp(maxHp), hp(maxHp), maxMp(maxMp), mp(maxMp), attackPower(attackPower) {}
 
     // Destructor
     Player::~Player() {}
 
     //getters
     string Player::getName() const { return name; }
+    string Player::getJob() const { return job; }
     int Player::getHp() const { return hp; }
     int Player::getMaxHp() const { return maxHp; }
     int Player::getAttackPower() const { return attackPower; }
     int Player::getMp() const { return mp; }
     int Player::getMaxMp() const { return maxMp; }
+    int Player::getDefense() const { return defense; }
 
     //setters
     void Player::setName(string newName) { name = newName; }
@@ -34,6 +39,7 @@ namespace RPG_Colaborate
     void Player::setAttackPower(int newAttackPower) { attackPower = newAttackPower; }
     void Player::setMp(int newMp) { mp = newMp; }
     void Player::setMaxMp(int newMaxMp) { maxMp = newMaxMp; }
+    void Player::setDefense(int newDefense) { defense = newDefense; }
 
     bool Player::consumeMp(int cost) {
         if (mp >= cost) {
@@ -57,6 +63,9 @@ namespace RPG_Colaborate
     // 2. Take Damage (受到傷害)(已調整)
     // 減少生命值，若沒有存活則彈出死亡播報
     void Player::takeDamage(int damage) {
+        if(defense>0){
+            damage = round(damage * (1 - ( defense / (defense + 100) )));
+        }
         hp -= damage;
         if (hp < 0) {
             hp = 0; // Prevent HP from dropping below zero
@@ -90,7 +99,7 @@ namespace RPG_Colaborate
 
         // 使用道具
         cout << name << " uses an item: [" << theItem.getName() << "]!" << endl;
-        theItem.use();
+        theItem.use(*this);
         return true;
     }
 
@@ -118,5 +127,21 @@ namespace RPG_Colaborate
     {
         return hp > 0;
     }
+
+    void Player::heal(int amount) {
+        hp += amount;
+        if (hp > maxHp) {
+            hp = maxHp; // 補血不能超過最大生命值
+        }
+        cout << "💚 " << name << " healed " << amount << " HP points! " << "(Current HP: " << hp << "/" << maxHp << ")" << endl;
+    }
+
+    //void Player::restoreMp(int amount) {
+    //    mp += amount;
+    //    if (mp > maxMp) {
+    //        mp = maxMp; // 補魔不能超過最大魔力值
+    //    }
+    //    std::cout << "💙 " << name << " healed " << amount << " MP points. Current MP: " << mp << "/" << maxMp << "\n";
+    //}
 }
     

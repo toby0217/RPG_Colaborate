@@ -15,44 +15,54 @@ namespace RPG_Colaborate
 
     class Player
     {
-    private:
+    protected:
         /* Basic attributes */
         string name;
+        string job;
         int hp;
         int maxHp;
         int attackPower;
         int mp;
         int maxMp;
+        int defense;
         map<int, Item> items;
         Skill* skillbox[3];
     public:
-        Player(string name, int maxHp, int maxMp, int attackPower);
+        Player();
+        Player(string theName, int theMaxHp, int theMaxMp, int theAttackPower, int theDefense);
         ~Player();
 
         // Getters
         string getName() const;
+        string getJob() const;
         int getHp() const;
         int getMaxHp() const;
         int getAttackPower() const;
         int getMp() const;
         int getMaxMp() const;
+        int getDefense() const;
 
         // Setters
-        void setName(string mewName);
+        void setName(string newName);
         void setHp(int newHp);
         void setMaxHp(int newMaxHp);
         void setAttackPower(int newAttack);
         void setMp(int newMp);
         void setMaxMp(int newMaxMp);
+        void setDefense(int newDefense);
 
         bool consumeMp(int amount);
 
         // Core combat and interaction actions
-        void attack(Monster& target);
-        void takeDamage(int damage);
+        virtual void attack(Monster& target);
+        virtual void takeDamage(int damage);
         bool useItem(int itemCode);
         bool useSkill(int skillNumber, Monster& target);
         bool isAlive();
+
+        // 在 public: 底下找地方補上這兩行
+        void heal(int amount);
+        //void restoreMp(int amount);
     };
 }
 

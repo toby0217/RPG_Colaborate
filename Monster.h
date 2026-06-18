@@ -17,12 +17,12 @@ namespace RPG_Colaborate
         int attackPower;
         int rewardGold;
         int evadeRate;
-        double defense;
+        int defense;
 
     public:
         //建構子
         Monster();
-        Monster(const string& name,int hp,int attackPower,int rewardGold,int evadeRate,double defense);
+        Monster(const string& name,int hp,int attackPower,int rewardGold,int evadeRate,int defense);
 
 
         //getters
@@ -31,7 +31,7 @@ namespace RPG_Colaborate
         int getAttackPower()const;
         int getRewardGold()const;
         int getEvadeRate()const;
-        double getDefense()const;
+        int getDefense()const;
 
 
         //setters
@@ -40,7 +40,7 @@ namespace RPG_Colaborate
         void setAttackPower(int newAttackPower);
         void setRewardGold(int newRewardGold);
         void setEvadeRate(int newEvadeRate);
-        void setDefense(double newDefense);
+        void setDefense(int newDefense);
 
 
         //function

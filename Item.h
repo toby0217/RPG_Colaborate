@@ -6,6 +6,8 @@ using std::string;
 
 namespace RPG_Colaborate
 {
+    class Player;
+
     class Item
     {
     private:
@@ -16,6 +18,7 @@ namespace RPG_Colaborate
 
     public:
         // 建構子
+        Item();
         Item(string name, string type, int effectValue, int quantity);
         ~Item();
 
@@ -32,7 +35,7 @@ namespace RPG_Colaborate
         void setQuantity(int newQuantity);
 
         // 使用道具之類的
-        void use();
+        void use(Player& user);
         void showInfo() const;
         bool isAvailable() const;
     };

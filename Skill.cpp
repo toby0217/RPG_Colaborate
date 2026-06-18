@@ -9,18 +9,20 @@ using std::endl;
 namespace RPG_Colaborate
 {
     //constructors
-    Skill::Skill(string name, int damage, int mpCost):
-    name(name),damage(damage),mpCost(mpCost) {}
+    Skill::Skill(string theName, string theType, int theDamage, int theMpCost)
+    : name(theName), type(theType), damage(theDamage), mpCost(theMpCost) {}
 
     Skill::~Skill(){}
 
     //getters
     string Skill::getName() const { return name; }
+    string Skill::getType() const { return type; }
     int Skill::getDamage() const { return damage; }
     int Skill::getMpCost() const { return mpCost; }
 
     //setters
-    void Skill::setName(const string& newName) { name = newName; }
+    void Skill::setName(string newName) { name = newName; }
+    void Skill::setType(string newType) { name = newType; }
     void Skill::setDamage(int newDamage) { damage = newDamage; }
     void Skill::setMpCost(int newMpCost) { mpCost = newMpCost; }
 
