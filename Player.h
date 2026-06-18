@@ -15,7 +15,7 @@ namespace RPG_Colaborate
 
     class Player
     {
-    private:
+    protected:
         /* Basic attributes */
         string name;
         std::string job;
