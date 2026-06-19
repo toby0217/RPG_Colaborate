@@ -10,9 +10,9 @@ namespace RPG_Colaborate {
     : Player(), criticalRate(15), criticalEffect(200)
     {
         job = "Knight";
-        *skillbox[0] = Skill("Shield Charge", "Damage", attackPower, 30);
-        *skillbox[1] = Skill("Knight Aura", "CC", 0, 50);
-        *skillbox[2] = Skill("The Indomitable Will", "Buff", 0, 90);
+        skillbox[0] = new Skill("Shield Charge", "Damage", attackPower, 30);
+        skillbox[1] = new Skill("Knight Aura", "CC", 0, 50);
+        skillbox[2] = new Skill("The Indomitable Will", "Buff", 0, 90);
     }
     Knight::Knight(string theName, int theMaxHp, int theMaxMp, int theAttackPower, int theDefense)
     : Player(theName, theMaxHp, theMaxMp, theAttackPower, theDefense), 
@@ -20,9 +20,9 @@ namespace RPG_Colaborate {
     {
         job = "Knight";
         job = "Knight";
-        *skillbox[0] = Skill("Shield Charge", "Damage", attackPower, 30);
-        *skillbox[1] = Skill("Knight Aura", "CC", 0, 50);
-        *skillbox[2] = Skill("The Indomitable Will", "Buff", 0, 90);
+        skillbox[0] = new Skill("Shield Charge", "Damage", attackPower, 30);
+        skillbox[1] = new Skill("Knight Aura", "CC", 0, 50);
+        skillbox[2] = new Skill("The Indomitable Will", "Buff", 0, 90);
     }
 
     // getters
@@ -39,6 +39,10 @@ namespace RPG_Colaborate {
             cout << "🛡️ [Knight Passive] HP below 50%! Guard activated." << endl;
             // Reduce incoming damage by 30% (Takes only 70% of the damage)
             Player::takeDamage(round(0.7 * damage));
+        }
+        else {
+            // 🛠️ 補上這段，不然騎士滿血時會無敵！
+            Player::takeDamage(damage);
         }
     }
 }

@@ -24,7 +24,7 @@ namespace RPG_Colaborate {
         void setCriticalEffect(int newEffect);
 
         // Override takeDamage for flat damage reduction (Knight's passive)
-        void takeDamage(int damage);
+        void takeDamage(int damage) override;
     };
 }
 

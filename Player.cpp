@@ -16,7 +16,15 @@ namespace RPG_Colaborate
     : name(theName), job("Unknown"), maxHp(maxHp), hp(maxHp), maxMp(maxMp), mp(maxMp), attackPower(attackPower) {}
 
     // Destructor
-    Player::~Player() {}
+    Player::~Player() {
+    
+        for (int i = 0; i < 3; ++i) {
+            if (skillbox[i] != nullptr) {
+                delete skillbox[i]; // 💡 確保每一招 new 出來的技能都有被釋放！
+                skillbox[i] = nullptr;
+            }
+        }
+    }
 
     //getters
     string Player::getName() const { return name; }
