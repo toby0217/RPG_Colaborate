@@ -27,6 +27,7 @@ namespace RPG_Colaborate
         int defense;
         map<int, Item> items;
         Skill* skillbox[3];
+        int damageBuffTurns;
     public:
         Player();
         Player(string theName, int theMaxHp, int theMaxMp, int theAttackPower, int theDefense);
@@ -63,6 +64,9 @@ namespace RPG_Colaborate
         // 在 public: 底下找地方補上這兩行
         void heal(int amount);
         //void restoreMp(int amount);
+
+        void setDamageBuffTurns(int turns);
+        void reviveWithHp(int reviveHp);
     };
 }
 

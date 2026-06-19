@@ -151,5 +151,26 @@ namespace RPG_Colaborate
     //    }
     //    std::cout << "💙 " << name << " healed " << amount << " MP points. Current MP: " << mp << "/" << maxMp << "\n";
     //}
+
+    void Player::setDamageBuffTurns(int turns) {
+        this->damageBuffTurns = turns;
+        std::cout << name << " gained damage buff for " << turns << " turns" << std::endl;
+    }
+
+    void Player::reviveWithHp(int reviveHp) {
+        // 安全檢查：通常只有死掉的人可以被復活
+        if (this->hp <= 0) {
+            this->hp = reviveHp;
+            
+            // 確保復活後的血量不會超過最大血量上限
+            if (this->hp > this->maxHp) {
+                this->hp = this->maxHp;
+            }
+            
+            std::cout << name << " come back from Underworld! Revived and healed " << this->hp << " HP points" << std::endl;
+        } else {
+            std::cout << name << " still alive, no need to revive!" << std::endl;
+        }
+    }
 }
     
