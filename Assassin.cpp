@@ -9,18 +9,18 @@ namespace RPG_Colaborate {
     : Player(), criticalRate(15), criticalEffect(200)
     {
         job = "Assassin";
-        *skillbox[0] = Skill("Cruel Kunai", "Damage", attackPower, 30);
-        *skillbox[1] = Skill("Shadow Vanish", "Hide", 0, 40);
-        *skillbox[2] = Skill("Nightmare Reap", "Damage", 0, 60);
+        skillbox[0] = new Skill("Cruel Kunai", "Damage", attackPower, 30);
+        skillbox[1] = new Skill("Shadow Vanish", "Hide", 0, 40);
+        skillbox[2] = new Skill("Nightmare Reap", "Damage", 0, 60);
     }
     Assassin::Assassin(string theName, int theMaxHp, int theMaxMp, int theAttackPower, int theDefense)
     : Player(theName, theMaxHp, theMaxMp, theAttackPower, theDefense), 
       criticalRate(15), criticalEffect(200)
     {
         job = "Assassin";
-        *skillbox[0] = Skill("Cruel Kunai", "Damage", attackPower, 30);
-        *skillbox[1] = Skill("Shadow Vanish", "Hide", 0, 40);
-        *skillbox[2] = Skill("Nightmare Reap", "Damage", 0, 60);
+        skillbox[0] = new Skill("Cruel Kunai", "Damage", attackPower, 30);
+        skillbox[1] = new Skill("Shadow Vanish", "Hide", 0, 40);
+        skillbox[2] = new Skill("Nightmare Reap", "Damage", 0, 60);
     }
 
     // getters

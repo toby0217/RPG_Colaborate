@@ -30,7 +30,7 @@ namespace RPG_Colaborate
     public:
         Player();
         Player(string theName, int theMaxHp, int theMaxMp, int theAttackPower, int theDefense);
-        ~Player();
+        virtual ~Player();
 
         // Getters
         string getName() const;
