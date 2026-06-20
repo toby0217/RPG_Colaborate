@@ -2,6 +2,9 @@
 #include <iostream>
 #include <vector>
 #include <algorithm> // For std::sort
+using std::sort;
+using std::cout;
+using std::endl;
 
 namespace RPG_Colaborate {
     // Constructors
@@ -9,18 +12,24 @@ namespace RPG_Colaborate {
     : Player(), criticalRate(15), criticalEffect(200)
     {
         job = "Assassin";
-        skillbox[0] = new Skill("Cruel Kunai", "Damage", attackPower, 30);
-        skillbox[1] = new Skill("Shadow Vanish", "Hide", 0, 40);
-        skillbox[2] = new Skill("Nightmare Reap", "Damage", 0, 60);
+        skillbox[0] = new Skill("Cruel Kunai", SINGLE, NONEH, POISON, 2,
+            DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, NONE, attackPower, 1.2, 0, 30, 0, 3);
+        skillbox[1] = new Skill("Shadow Vanish", OWN, NONEH, HIDE, 1,
+            NONE, STATIC, NONE, NONE, NONE, NONE, NONE, attackPower, 1.6, 0, 40, 0, 3);
+        skillbox[2] = new Skill("Nightmare Reap", SINGLE, NONEH, NONEE, 0,
+            DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, NONE, attackPower, 2.5, 0, 60, 0, 6);
     }
     Assassin::Assassin(string theName, int theMaxHp, int theMaxMp, int theAttackPower, int theDefense)
     : Player(theName, theMaxHp, theMaxMp, theAttackPower, theDefense), 
       criticalRate(15), criticalEffect(200)
     {
         job = "Assassin";
-        skillbox[0] = new Skill("Cruel Kunai", "Damage", attackPower, 30);
-        skillbox[1] = new Skill("Shadow Vanish", "Hide", 0, 40);
-        skillbox[2] = new Skill("Nightmare Reap", "Damage", 0, 60);
+        skillbox[0] = new Skill("Cruel Kunai", SINGLE, NONEH, POISON, 2,
+            DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, NONE, attackPower, 1.2, 0, 30, 0, 3);
+        skillbox[1] = new Skill("Shadow Vanish", OWN, NONEH, HIDE, 1,
+            NONE, STATIC, NONE, NONE, NONE, NONE, NONE, attackPower, 1.6, 0, 40, 0, 3);
+        skillbox[2] = new Skill("Nightmare Reap", SINGLE, NONEH, NONEE, 0,
+            DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, NONE, attackPower, 2.5, 0, 60, 0, 6);
     }
 
     Assassin::~Assassin()
@@ -76,5 +85,45 @@ namespace RPG_Colaborate {
                 targetsAttacked++;
             }
         }
+    }
+
+    bool Assassin::useSkill(int skillNumber, int targetIndex, vector<Player*> players, vector<Monster*> monsters)
+    {
+        if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) return false;
+
+        int mpRequired = skillbox[skillNumber]->getMpCost();
+        if (mp < mpRequired) {
+            cout << name << " does not have enough MP!" << endl;
+            return false;
+        }
+
+        // 播報台詞
+        if (skillNumber == 0) cout << "🗡️ [Assassin]: \"A swift end...\"" << endl;
+        else if (skillNumber == 1) cout << "🗡️ [Assassin]: \"Shadows veil me.\"" << endl;
+        else if (skillNumber == 2) cout << "🗡️ [Assassin]: \"Sleep now, into the eternal nightmare.\"" << endl;
+
+        // 若為大招，先記錄目標的狀態
+        Monster* targetMonster = nullptr;
+        if (skillNumber == 2 && targetIndex >= 0 && targetIndex < monsters.size()) {
+            targetMonster = monsters[targetIndex];
+        }
+
+        // 呼叫父類執行技能
+        bool success = Player::useSkill(skillNumber, targetIndex, players, monsters);
+
+        // 大招擊殺判定
+        if (success && skillNumber == 2 && targetMonster != nullptr) {
+            if (!targetMonster->isAlive()) {
+                cout << "💀 [Nightmare Reap] Target executed! Skill cooldown reset and MP refunded. You may act again!" << endl;
+                // 回復 MP
+                this->mp += skillbox[2]->getMpCost();
+                if (this->mp > this->maxMp) this->mp = this->maxMp;
+                skillbox[2]->setCD(0);
+                
+                // 重置 CD 邏輯 (需在 BattleManager 的技能冷卻系統配合，這裡先重置 Skill 本身狀態若有)
+                // this->triggerFreeAction(); // 示意：這部分通常由 BattleManager 偵測回傳值或狀態來決定
+            }
+        }
+        return success;
     }
 }

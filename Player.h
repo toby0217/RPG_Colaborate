@@ -56,7 +56,7 @@ namespace RPG_Colaborate
         bool consumeMp(int amount);
 
         // Core combat and interaction actions
-        virtual void attack(int targetIndex, vector<Monster*> monsters);
+        virtual void attack(int targetIndex, vector<Monster*> monsters, vector<Player*> players);
         virtual void takeDamage(int damage);
         bool useItem(int itemCode);
         virtual bool useSkill(int skillNumber, int targetIndex, vector<Player*> players, vector<Monster*> monsters);
@@ -69,7 +69,9 @@ namespace RPG_Colaborate
         string getBuffs();
         string getDebuffs();
 
-        void takeEffect(EffectType effectType);
+        void takeEffect(EffectType& effectType, int effectTurns);
+        void reviveWithHp(int reviveHp);
+        virtual void triggerClassSpecial(EffectType& type);
     };
 }
 

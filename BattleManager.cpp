@@ -54,7 +54,7 @@ namespace RPG_Colaborate
             cin >> choice;
 
             if (choice == 'a' || choice == 'A') {
-                currentPlayer.attack(currentTargetIdx, monsters);
+                currentPlayer.attack(currentTargetIdx, monsters, players);
                 actionCompleted = true; // 普攻結束回合
             }
             else if (choice == '1' || choice == '2' || choice == '3') {

@@ -7,163 +7,133 @@ using std::cout;
 using std::endl;
 
 namespace RPG_Colaborate {
-    // Constructors
     Ranger::Ranger()
-    : Player(), criticalRate(20), criticalEffect(150), multiShotTurns(0), decoyHp(0)
+    : Player(), criticalRate(15), criticalEffect(200), multiShotTurns(0)
     {
         job = "Ranger";
-        skillbox[0] = new Skill("連續射擊", "Buff", 0, 40);
-        skillbox[1] = new Skill("假人操術", "Hide", 0, 50);
-        skillbox[2] = new Skill("萬箭齊發", "Damage", attackPower, 80);
-
-        //  初始化技能冷卻狀態
-        for(int i = 0; i < 3; ++i) {
-            currentCD[i] = 0; // 初始 CD 皆為 0 (可直接使用)
-        }
-        maxCD[0] = 4; 
-        maxCD[1] = 3; 
-        maxCD[2] = 6; 
+        skillbox[0] = new Skill("連續射擊", OWN, NONEH, CONTSHOOT, 2,
+            NONE, STATIC, NONE, NONE, NONE, NONE, NONE, attackPower, 0, 0, 30, 0, 4);
+        skillbox[1] = new Skill("假人操術", OWN, NONEH, SPACEGOAT, 3,
+            NONE, STATIC, NONE, NONE, NONE, NONE, NONE, attackPower, 0, 0, 40, 0, 3);
+        skillbox[2] = new Skill("萬箭齊發", SINGLE, NONEH, NONEE, 0,
+            NONE, NONE, NONE, NONE, NONE, NONE, SPECIAL, attackPower, 0.6, 0, 70, 0, 6);
     }
 
     Ranger::Ranger(string theName, int theMaxHp, int theMaxMp, int theAttackPower, int theDefense)
     : Player(theName, theMaxHp, theMaxMp, theAttackPower, theDefense), 
-      criticalRate(20), criticalEffect(150), multiShotTurns(0), decoyHp(0)
+      criticalRate(15), criticalEffect(200), multiShotTurns(0)
     {
         job = "Ranger";
-        skillbox[0] = new Skill("連續射擊", "Buff", 0, 40);
-        skillbox[1] = new Skill("假人操術", "Hide", 0, 50);
-        skillbox[2] = new Skill("萬箭齊發", "Damage", attackPower, 80);
-
-        //  初始化技能冷卻狀態
-        for(int i = 0; i < 3; ++i) {
-            currentCD[i] = 0; 
-        }
-        maxCD[0] = 4; 
-        maxCD[1] = 3; 
-        maxCD[2] = 6; 
+        skillbox[0] = new Skill("連續射擊", OWN, NONEH, CONTSHOOT, 2,
+            NONE, STATIC, NONE, NONE, NONE, NONE, NONE, attackPower, 0, 0, 30, 0, 4);
+        skillbox[1] = new Skill("假人操術", OWN, NONEH, SPACEGOAT, 3,
+            NONE, STATIC, NONE, NONE, NONE, NONE, NONE, attackPower, 0, 0, 40, 0, 3);
+        skillbox[2] = new Skill("萬箭齊發", SINGLE, NONEH, NONEE, 0,
+            DAMAGE, NONE, NONE, NONE, NONE, NONE, NONE, attackPower, 0.6, 0, 70, 0, 6);
     }
 
-    // Getters & Setters 
     int Ranger::getCriticalRate() const { return criticalRate; }
     int Ranger::getCriticalEffect() const { return criticalEffect; }
     int Ranger::getMultiShotTurns() const { return multiShotTurns; }
-    int Ranger::getDecoyHp() const { return decoyHp; }
     void Ranger::setCriticalRate(int newRate) { criticalRate = newRate; }
     void Ranger::setCriticalEffect(int newEffect) { criticalEffect = newEffect; }
 
-    // 覆寫普攻邏輯
-    void Ranger::attack(int targetIndex, vector<Monster*> monsters) {
+    void Ranger::attack(int targetIndex, vector<Monster*> monsters, vector<Player*> players) {
         bool isBoss = (monsters[targetIndex]->getName().find("Boss") != string::npos);
         double multiplier = isBoss ? 1.5 : 1.0;
-        int finalDamage = round(attackPower * multiplier);
-        int shots = (multiShotTurns > 0) ? 3 : 1; 
+
+        int currentCritRate = criticalRate + ((StatusEffectList[CONTSHOOT] >= 0) ? 30 : 0);
 
         if (isBoss) {
             cout << " [Ranger Passive] Locked onto Boss! Damage increased by 50%!" << endl;
         }
 
-        for (int i = 0; i < shots; ++i) {
+        if (StatusEffectList[CONTSHOOT] >= 0) {
+            for (int i = 1; i <= 3; i++) {
+                int finalDamage = round(0.6 * attackPower * multiplier);
+                if (rand() % 100 < currentCritRate) {
+                    finalDamage = finalDamage * criticalEffect / 100;
+                    cout << " Critical Hit! ";
+                }
+                cout << name << " shoots an arrow at " << monsters[targetIndex]->getName() << "!" << endl;
+                monsters[targetIndex]->takeDamage(finalDamage);
+                
+                if (!monsters[targetIndex]->isAlive()) break; 
+            }
+        }
+        else {
+            int finalDamage = attackPower;
+            if (rand() % 100 < currentCritRate) {
+                finalDamage = finalDamage * criticalEffect / 100;
+                cout << " Critical Hit! ";
+            }
             cout << name << " shoots an arrow at " << monsters[targetIndex]->getName() << "!" << endl;
             monsters[targetIndex]->takeDamage(finalDamage);
-            if (!monsters[targetIndex]->isAlive()) break; 
         }
     }
 
-    // 覆寫受傷邏輯 (假人機制)
-    void Ranger::takeDamage(int damage) {
-        if (decoyHp > 0) {
-            cout << "🪵 [Decoy] The decoy takes the hit!" << endl;
-            decoyHp -= damage;
-            if (decoyHp <= 0) {
-                decoyHp = 0;
-                cout << "🪵 The decoy has been destroyed!" << endl;
-            }
-        } else {
-            Player::takeDamage(damage);
-        }
-    }
-
-    // 遊俠的技能邏輯 
     bool Ranger::useSkill(int skillNumber, int targetIndex, vector<Player*> players, vector<Monster*> monsters) {
-        if (skillNumber < 1 || skillNumber > 3) {
-            cout << "The skill does not exist." << endl;
+        if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) return false;
+
+        int mpRequired = skillbox[skillNumber]->getMpCost();
+        if (mp < mpRequired) {
+            cout << name << " does not have enough MP!" << endl;
             return false;
         }
 
-        int skillIndex = skillNumber - 1;
-        Skill* usedSkill = skillbox[skillIndex];
-
-        //  檢查是否在冷卻中
-        if (currentCD[skillIndex] > 0) {
-            cout << " Skill [" << usedSkill->getName() << "] is on cooldown! (" 
-                 << currentCD[skillIndex] << " turns remaining)" << endl;
-            return false; // 施放失敗，讓玩家重新選擇
-        }
-
-        // 檢查魔力
-        if (!consumeMp(usedSkill->getMpCost())) {
-            return false; 
-        }
-
-        cout << name << " casts a skill: [" << usedSkill->getName() << "]!" << endl;
-
-        // 執行技能效果
-        if (skillNumber == 1) { 
+        if (skillNumber == 0) { 
             multiShotTurns = 2; 
-            cout << " [Buff] Basic attacks become Triple Shot for 2 turns!" << endl;
-            attack(targetIndex ,monsters); 
+            cout << " [Buff] Basic attacks become Triple Shot for 2 turns! (Crit Rate +30%)" << endl;
+            // 回傳 false 讓主迴圈不視為行動結束
+            return false; 
+        } 
+        else if (skillNumber == 1) { 
+            cout << "🪵 [Hide] Summoned a Decoy to absorb incoming damage!" << endl;
+            // 實際減傷或阻擋交由引擎 SPACEGOAT 判定
         } 
         else if (skillNumber == 2) { 
-            decoyHp = hp; 
-            cout << "🪵 [Hide] Summoned a Decoy with " << decoyHp << " HP to absorb incoming damage!" << endl;
-        } 
-        else if (skillNumber == 3) { 
             cout << " [Arrow Rain] Unleashing a barrage of arrows!" << endl;
+            int currentCritRate = criticalRate + ((multiShotTurns > 0) ? 30 : 0); // 大招享受連射暴擊加成
+            int bouncesLeft = 10;
+
+            // 第一發優先命中主目標
+            if (monsters[targetIndex] != nullptr && monsters[targetIndex]->isAlive()) {
+                int arrowDamage = attackPower;
+                if (rand() % 100 < currentCritRate) {
+                    arrowDamage = arrowDamage * criticalEffect / 100;
+                    cout << " Critical Hit! ";
+                }
+                cout << "Arrow hits " << monsters[targetIndex]->getName() << "!" << endl;
+                monsters[targetIndex]->takeDamage(arrowDamage);
+                bouncesLeft--;
+            }
+
+            // 剩餘發數在全體存活敵人中隨機彈射
             std::vector<Monster*> aliveMonsters;
             for (auto m : monsters) {
-                if (m != nullptr && m->isAlive()) {
-                    aliveMonsters.push_back(m);
+                if (m != nullptr && m->isAlive()) aliveMonsters.push_back(m);
+            }
+
+            for (int i = 0; i < bouncesLeft; ++i) {
+                aliveMonsters.clear(); // 重新確認存活狀態
+                for (auto m : monsters) {
+                    if (m != nullptr && m->isAlive()) aliveMonsters.push_back(m);
                 }
-            }
 
-            if (!aliveMonsters.empty()) {
-                for (int i = 0; i < 10; ++i) {
-                    int randomIndex = rand() % aliveMonsters.size();
-                    Monster* randomTarget = aliveMonsters[randomIndex];
-                    bool isCrit = (rand() % 100 < criticalRate);
-                    int arrowDamage = attackPower;
-                    if (isCrit) {
-                        arrowDamage = arrowDamage * criticalEffect / 100;
-                        cout << " Critical Hit! ";
-                    }
-                    cout << "Arrow hits " << randomTarget->getName() << "!" << endl;
-                    randomTarget->takeDamage(arrowDamage);
+                if (aliveMonsters.empty()) {
+                    break;
                 }
-            } else {
-                cout << "But there are no enemies left!" << endl;
+
+                Monster* randomTarget = aliveMonsters[rand() % aliveMonsters.size()];
+                int arrowDamage = attackPower;
+                if (rand() % 100 < currentCritRate) {
+                    arrowDamage = arrowDamage * criticalEffect / 100;
+                    cout << " Critical Hit! ";
+                }
+                cout << "Arrow hits " << randomTarget->getName() << "!" << endl;
+                randomTarget->takeDamage(arrowDamage);
             }
         }
-
-        // 技能成功施放後，進入冷卻狀態
-        currentCD[skillIndex] = maxCD[skillIndex];
-        return true;
-    }
-
-    // 回合結束結算狀態 (包含 CD 減少)
-    void Ranger::updateTurnStatus() {
-        // 1. 減少連續射擊的 Buff 回合
-        if (multiShotTurns > 0) {
-            multiShotTurns--;
-            if (multiShotTurns == 0) {
-                cout << " [Buff Faded] Triple Shot effect has worn off." << endl;
-            }
-        }
-
-        // 2. 減少所有技能的冷卻時間
-        for (int i = 0; i < 3; ++i) {
-            if (currentCD[i] > 0) {
-                currentCD[i]--;
-            }
-        }
+        return Player::useSkill(skillNumber, targetIndex, players, monsters);
     }
 }

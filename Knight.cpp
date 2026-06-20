@@ -10,21 +10,24 @@ namespace RPG_Colaborate {
     : Player(), criticalRate(15), criticalEffect(200)
     {
         job = "Knight";
-        skillbox[0] = new Skill("Shield Charge", SPREAD, NONEH, LOWERDEFENSE,
-            DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, NONE, attackPower, 1.6, 0, 30, 0);
-        skillbox[1] = new Skill("Knight Aura", AOE, NONEH, TAUNT,
-            NONE, NONE, NONE, DEBUFF, NONE, NONE, NONE, 0, 0, 0, 50, 0);
-        skillbox[2] = new Skill("The Indomitable Will", OWN, NONEH, PERSEVERANCE,
-            NONE, STATIC, NONE, NONE, NONE, NONE, NONE, 0, 0, 0, 90, 0);
+        skillbox[0] = new Skill("Shield Charge", SPREAD, NONEH, LOWERDEFENSE, 2,
+            DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, NONE, attackPower, 1.2, 0, 30, 0, 3);
+        skillbox[1] = new Skill("Knight Aura", AOE, NONEH, TAUNT, 1,
+            NONE, NONE, NONE, DEBUFF, NONE, NONE, NONE, 0, 0, 0, 50, 0, 5);
+        skillbox[2] = new Skill("The Indomitable Will", OWN, NONEH, PERSEVERANCE, 2,
+            NONE, STATIC, NONE, NONE, NONE, NONE, NONE, 0, 0, 0, 90, 0, 8);
     }
     Knight::Knight(string theName, int theMaxHp, int theMaxMp, int theAttackPower, int theDefense)
     : Player(theName, theMaxHp, theMaxMp, theAttackPower, theDefense), 
       criticalRate(15), criticalEffect(200)
     {
         job = "Knight";
-        skillbox[0] = new Skill("Shield Charge", "Damage", attackPower, 30);
-        skillbox[1] = new Skill("Knight Aura", "CC", 0, 50);
-        skillbox[2] = new Skill("The Indomitable Will", "Buff", 0, 90);
+        skillbox[0] = new Skill("Shield Charge", SPREAD, NONEH, LOWERDEFENSE, 2,
+            DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, NONE, attackPower, 1.2, 0, 30, 0, 3);
+        skillbox[1] = new Skill("Knight Aura", AOE, NONEH, TAUNT, 1,
+            NONE, NONE, NONE, DEBUFF, NONE, NONE, NONE, 0, 0, 0, 50, 0, 5);
+        skillbox[2] = new Skill("The Indomitable Will", OWN, NONEH, PERSEVERANCE, 2,
+            NONE, STATIC, NONE, NONE, NONE, NONE, NONE, 0, 0, 0, 90, 0, 8);
     }
 
     Knight::~Knight()
@@ -58,8 +61,26 @@ namespace RPG_Colaborate {
         }
     }
 
-    bool Knight::useSkill(int skillNumber, Monster& target)
+    bool Knight::useSkill(int skillNumber, int targetIndex, vector<Player*> players, vector<Monster*> monsters)
     {
+        if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) return false;
 
+        int mpRequired = skillbox[skillNumber]->getMpCost();
+        if (mp < mpRequired) {
+            cout << name << " does not have enough MP!" << endl;
+            return false;
+        }
+
+        // 提前播報技能台詞
+        if (skillNumber == 0) {
+            cout << "🛡️ [Knight]: \"Break their ranks! Shield Charge!\"" << endl;
+        } else if (skillNumber == 1) {
+            cout << "🛡️ [Knight]: \"Come at me! I am your impenetrable wall!\"" << endl;
+        } else if (skillNumber == 2) {
+            cout << "🛡️ [Knight]: \"My will is forged in iron... I shall not fall!\"" << endl;
+        }
+
+        // 呼叫父類的共通邏輯 (扣魔、扣血、呼叫 Skill::use)
+        return Player::useSkill(skillNumber, targetIndex, players, monsters);
     }
 }

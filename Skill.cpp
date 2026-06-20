@@ -4,7 +4,9 @@
 #include "Monster.h"
 #include <iostream>
 #include <string>
+#include <vector>
 using std::string;
+using std::vector;
 using std::cout;
 using std::endl;
 
@@ -14,36 +16,68 @@ namespace RPG_Colaborate
     Skill::Skill() {}
     Skill::Skill(string theName, string theType, int theDamage, int theMpCost)
     : name(theName), type(theType), damage(theDamage), mpCost(theMpCost) {}
-    Skill::Skill(string theName, TargetType TType, HealTargetType HType, EffectType EType,
-    SkillType isDmg, SkillType isSt, SkillType isB, SkillType isDb, SkillType isH, SkillType isSp, SkillType isRv,
-    int theDamage, double theMultiplier, int theHealPercent, int theMpCost, int theHpCost)
-    : name(theName), targetType(TType), healTargetType(HType), effectType(EType),
-    isDamage(isDmg), isStatic(isSt), isBuff(isB), isDebuff(isDb), isHeal(isH), isSpawn(isSp), isRevive(isRv),
-    damage(theDamage), multiplier(theMultiplier), healPercent(theHealPercent), mpCost(theMpCost), hpCost(theHpCost) {}
+    Skill::Skill(string theName, TargetType TType, HealTargetType HType, EffectType EType, int ETurns,
+    SkillType isDmg, SkillType isSt, SkillType isB, SkillType isDb, SkillType isH, SkillType isRv, SkillType isSp,
+    int theDamage, double theMultiplier, int theHealPercent, int theMpCost, int theHpCost, int theCD)
+    : name(theName), targetType(TType), healTargetType(HType), effectType(EType), effectTurns(ETurns),
+    isDamage(isDmg), isStatic(isSt), isBuff(isB), isDebuff(isDb), isHeal(isH), isRevive(isRv), isSpecial(isSp),
+    damage(theDamage), multiplier(theMultiplier), healPercent(theHealPercent), mpCost(theMpCost), hpCost(theHpCost), CD(theCD) {}
 
     Skill::~Skill(){}
 
-    //getters
+    // getters
     string Skill::getName() const { return name; }
     string Skill::getType() const { return type; }
+    TargetType Skill::getTargetType() const { return targetType; }
+    HealTargetType Skill::getHealTargetType() const { return healTargetType; }
+    EffectType Skill::getEffectType() const { return effectType; }
+    int Skill::getEffectTurns() const { return effectTurns; }
+    SkillType Skill::getIsDamage() const { return isDamage; }
+    SkillType Skill::getIsStatic() const { return isStatic; }
+    SkillType Skill::getIsBuff() const { return isBuff; }
+    SkillType Skill::getIsDebuff() const { return isDebuff; }
+    SkillType Skill::getIsHeal() const { return isHeal; }
+    SkillType Skill::getIsRevive() const { return isRevive; }
+    SkillType Skill::getIsSpecial() const { return isSpecial; }
     int Skill::getDamage() const { return damage; }
+    double Skill::getMultiplier() const { return multiplier; }
+    int Skill::getHealPercent() const { return healPercent; }
     int Skill::getMpCost() const { return mpCost; }
+    int Skill::getHpCost() const { return hpCost; }
+    int Skill::getCD() const { return CD; }
 
-    //setters
+    // setters
     void Skill::setName(string newName) { name = newName; }
-    void Skill::setType(string newType) { name = newType; }
+    void Skill::setType(string newType) { type = newType; }
+    void Skill::setTargetType(TargetType newTargetType) { targetType = newTargetType; }
+    void Skill::setHealTargetType(HealTargetType newHealTargetType) { healTargetType = newHealTargetType; }
+    void Skill::setEffectType(EffectType newEffectType) { effectType = newEffectType; }
+    void Skill::setEffectTurns(int newEffectTurns) { effectTurns = newEffectTurns; }
+    void Skill::setIsDamage(SkillType newIsDamage) { isDamage = newIsDamage; }
+    void Skill::setIsStatic(SkillType newIsStatic) { isStatic = newIsStatic; }
+    void Skill::setIsBuff(SkillType newIsBuff) { isBuff = newIsBuff; }
+    void Skill::setIsDebuff(SkillType newIsDebuff) { isDebuff = newIsDebuff; }
+    void Skill::setIsHeal(SkillType newIsHeal) { isHeal = newIsHeal; }
+    void Skill::setIsRevive(SkillType newIsRevive) { isRevive = newIsRevive; }
+    void Skill::setIsSpecial(SkillType newIsSpecial) { isSpecial = newIsSpecial; }
     void Skill::setDamage(int newDamage) { damage = newDamage; }
+    void Skill::setMultiplier(double newMultiplier) { multiplier = newMultiplier; }
+    void Skill::setHealPercent(int newHealPercent) { healPercent = newHealPercent; }
     void Skill::setMpCost(int newMpCost) { mpCost = newMpCost; }
+    void Skill::setHpCost(int newHpCost) { hpCost = newHpCost; }
+    void Skill::setCD(int newCD) { CD = newCD; }
 
     //function
     // 使用技能(已調整)
     // 讓技能主導施法程序
-    void Skill::use(Player& user, int targetIndex, vector<Player*> players, vector<Monster*> monsters)
+    void Skill::use(Player& user, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters)
     {
         // cout<<"Use \""<<name<<"\" cost "<<mpCost<<" MP"<<endl;
         
         cout << user.getName() << " casts a skill: [" << name << "]!" << endl;
         damage = multiplier * user.getAttackPower();
+
+        int leftTargetIndex, rightTargetIndex;
 
         // 技能有傷害:依照類型進行索敵
         if (isDamage == DAMAGE) {
@@ -54,7 +88,7 @@ namespace RPG_Colaborate
                 break;
             case SPREAD:
                 monsters[targetIndex]->takeDamage(damage);
-                int leftTargetIndex = targetIndex - 1;
+                leftTargetIndex = targetIndex - 1;
                 while (leftTargetIndex >= 0 &&
                     (monsters[leftTargetIndex] == nullptr || !monsters[leftTargetIndex]->isAlive())) {
                     leftTargetIndex--;
@@ -63,7 +97,7 @@ namespace RPG_Colaborate
                     monsters[leftTargetIndex]->takeDamage(0.5 * damage);
                 }
 
-                int rightTargetIndex = targetIndex + 1;
+                rightTargetIndex = targetIndex + 1;
                 while (leftTargetIndex < monsters.size() &&
                     (monsters[rightTargetIndex] == nullptr || !monsters[rightTargetIndex]->isAlive())) {
                     rightTargetIndex++;
@@ -86,7 +120,7 @@ namespace RPG_Colaborate
 
         if (isStatic == STATIC) {
             if (targetType == OWN) {
-                user.takeEffect(effectType);
+                user.takeEffect(effectType, effectTurns);
             }
         }
 
@@ -95,12 +129,12 @@ namespace RPG_Colaborate
             switch (targetType)
             {
             case OWN:
-                user.takeEffect(effectType);
+                user.takeEffect(effectType, effectTurns);
                 break;
             case TEAM:
                 for (int i = 0; i < players.size(); i++) {
                     if (players[i]->isAlive()) {
-                        players[i]->takeEffect(effectType);
+                        players[i]->takeEffect(effectType, effectTurns);
                     }
                 }
             default:
@@ -117,7 +151,7 @@ namespace RPG_Colaborate
                 break;
             case SPREAD:
                 monsters[targetIndex]->takeEffect(effectType);
-                int leftTargetIndex = targetIndex - 1;
+                leftTargetIndex = targetIndex - 1;
                 while (leftTargetIndex >= 0 &&
                     (monsters[leftTargetIndex] == nullptr || !monsters[leftTargetIndex]->isAlive())) {
                     leftTargetIndex--;
@@ -126,7 +160,7 @@ namespace RPG_Colaborate
                     monsters[leftTargetIndex]->takeEffect(effectType);
                 }
 
-                int rightTargetIndex = targetIndex + 1;
+                rightTargetIndex = targetIndex + 1;
                 while (leftTargetIndex < monsters.size() &&
                     (monsters[rightTargetIndex] == nullptr || !monsters[rightTargetIndex]->isAlive())) {
                     rightTargetIndex++;
@@ -149,14 +183,14 @@ namespace RPG_Colaborate
 
         // 技能有治療
         if (isHeal == HEAL) {
+            double maxHpRate = 0;
+            int lowerHpIndex = 0;
             switch (healTargetType)
             {
             case OWN:
                 user.heal(0.01 * healPercent * user.getMaxHp());
                 break;
             case LOWERHP:
-                double maxHpRate = 0;
-                int lowerHpIndex = 0;
                 for (int i = 0; i < players.size(); i++) {
                     double playerHpRate = 1.0 * players[i]->getHp() / players[i]->getMaxHp();
                     if (playerHpRate > maxHpRate) {
@@ -178,11 +212,6 @@ namespace RPG_Colaborate
             }
         }
 
-        // 技能有召喚
-        if (isSpawn == SPAWN) {
-            // 增加召喚物
-        }
-
         // 技能有復活
         if (isRevive == REVIVE) {
             int reviveTarget = 0;
@@ -192,6 +221,10 @@ namespace RPG_Colaborate
             } while (players[reviveTarget]->isAlive());
             players[reviveTarget]->setHp(players[reviveTarget]->getMaxHp());
             players[reviveTarget]->setMp(players[reviveTarget]->getMaxMp());
+        }
+
+        if (isSpecial == SPECIAL) {
+            return;
         }
     }
 

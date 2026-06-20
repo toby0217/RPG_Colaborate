@@ -64,7 +64,7 @@ namespace RPG_Colaborate
 
     // 1. Basic Attack(已調整)
     // 發動普攻，然後怪物受到傷害
-    void Player::attack(int targetIndex, vector<Monster*> monsters) {
+    void Player::attack(int targetIndex, vector<Monster*> monsters, vector<Player*> players) {
         cout << name << " performs a basic attack!" << endl;
         monsters[targetIndex]->takeDamage(attackPower);
     }
@@ -111,24 +111,51 @@ namespace RPG_Colaborate
         theItem.use(*this);
         return true;
     }
+    void Player::takeEffect(EffectType& effectType, int effectTurns) {
+        // 記錄狀態與對應的回合數
+        StatusEffectList[effectType] = effectTurns;
+        cout << "✨ " << name << " is now affected by status effect!" << endl;
+    }
+
+    // 實作空殼的特殊觸發，讓子類別去覆寫
+    void Player::triggerClassSpecial(EffectType& type) {
+        // Default player does nothing special
+    }
 
     // 4. Use Skill (使用技能)(已調整)
-    bool Player::useSkill(int skillNumber, int targetIndex, vector<Player*> players, vector<Monster*> monsters) {
-        // 計畫:加入技能庫，選擇技能施放
-        // 呼叫該技能的use函式
-        if (skillNumber >= 1 && skillNumber < 4) {
-            if (consumeMp(skillbox[skillNumber-1]->getMpCost())) {
-                // 消耗魔力施放技能
-                skillbox[skillNumber-1]->use(*this, targetIndex, players, monsters);
-                return true;
-            }
-            // 魔力不足，回傳false
+    // 實作技能使用 (加入耗血邏輯)
+    bool Player::useSkill(int skillNumber, int targetIndex, vector<Player*> players, vector<Monster*> monsters)
+    {
+        if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) {
+            cout << "The skill does not exist." << endl;
+            return false;
+        }
+        
+        int mpRequired = skillbox[skillNumber]->getMpCost();
+        if (!consumeMp(mpRequired)) {
+            cout << name << " does not have enough MP!" << endl;
             return false;
         }
 
-        // skillnumber輸入錯誤，回傳false
-        cout << "The skill does not exist." << endl;
-        return false;
+        // 技能施放成功，開始計算 HpCost
+        int hpCostPercent = skillbox[skillNumber]->getHpCost();
+        if (hpCostPercent > 0) {
+            int hpDeduction = (maxHp * hpCostPercent) / 100;
+
+            if (hpDeduction >= hp) {
+                hp = 1;// 確保不會因為耗血而死
+            }
+            else {
+                hp -= hpDeduction;
+            }
+            cout << "🩸 " << name << " sacrifices " << hpDeduction << " HP to cast the skill! (Remaining HP: " << hp << ")" << endl;
+        }
+
+        cout << name << " casts a skill: [" << skillbox[skillNumber]->getName() << "]!" << endl;
+
+        // 交給 Skill 物件去執行具體邏輯
+        skillbox[skillNumber]->use(*this, targetIndex, players, monsters);
+        return true;
     }
 
     // 5. isAlive (確認存活)(已調整)
@@ -152,4 +179,22 @@ namespace RPG_Colaborate
     //    }
     //    std::cout << "💙 " << name << " healed " << amount << " MP points. Current MP: " << mp << "/" << maxMp << "\n";
     //}
+
+
+    void Player::reviveWithHp(int reviveHp) {
+        // 安全檢查：通常只有死掉的人可以被復活
+        if (this->hp <= 0) {
+            this->hp = reviveHp;
+            
+            // 確保復活後的血量不會超過最大血量上限
+            if (this->hp > this->maxHp) {
+                this->hp = this->maxHp;
+            }
+            
+            std::cout << name << " come back from Underworld! Revived and healed " << this->hp << " HP points" << std::endl;
+        } else {
+            std::cout << name << " still alive, no need to revive!" << std::endl;
+        }
+    }
 }
+    
