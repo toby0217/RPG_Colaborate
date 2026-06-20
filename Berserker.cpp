@@ -45,6 +45,20 @@ namespace RPG_Colaborate {
     void Berserker::setCriticalRate(int newRate) { criticalRate = newRate; }
     void Berserker::setCriticalEffect(int newEffect) { criticalEffect = newEffect; }
 
+    // ✨ 新增：實作狂戰士的專屬普攻（支援暴擊與災厄之手加成）
+    void Berserker::attack(int targetIndex, vector<Monster*> monsters, vector<Player*> players) {
+        int currentCritRate = criticalRate + getTempCritRateBonus();
+        int currentCritEffect = criticalEffect + getTempCritEffectBonus();
+
+        int finalDamage = attackPower;
+        if (rand() % 100 < currentCritRate) {
+            finalDamage = finalDamage * currentCritEffect / 100;
+            cout << " Critical Hit! ";
+        }
+        cout << name << " swings a massive weapon at " << monsters[targetIndex]->getName() << "!" << endl;
+        monsters[targetIndex]->takeDamage(finalDamage);
+    }
+
     void Berserker::takeDamage(int damage) {
         int oldHp = hp;
         Player::takeDamage(damage);
