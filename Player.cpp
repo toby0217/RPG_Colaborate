@@ -87,28 +87,50 @@ namespace RPG_Colaborate
         }
     }
 
-    // 3. Use Item (使用道具)(已調整)
+    // 3. Use Item (戰鬥中使用道具)
     bool Player::useItem(int itemCode) {
-        // 檢查道具代碼是否合法
         auto it = items.find(itemCode);
         if (it == items.end()) {
-            cout << "No this item." << endl;
+            cout << "背包裡沒有這個道具。\n";
             return false;
         }
 
-        Item theItem = items[itemCode];
-        // 檢查道具是否能使用，以及數量是否>0
+        // ✨ 重點修正：加上 & 取得參考，這樣扣除的數量才會確實更新回背包
+        Item& theItem = items[itemCode];
+
+        // 戰鬥限制攔截
+        if (!theItem.getUsableInBattle()) {
+            cout << "⚠️ [" << theItem.getName() << "] 只能在戰鬥結束後（脫戰）使用！\n";
+            return false;
+        }
+
         if (!theItem.isAvailable()) {
-            cout << "Failed to use this item." << endl;
-            if (theItem.getQuantity() <= 0) {
-                cout << "Not enough items in package." << endl;
-            }
+            cout << "道具數量不足。\n";
             return false;
         }
 
-        // 使用道具
-        cout << name << " uses an item: [" << theItem.getName() << "]!" << endl;
-        theItem.use(*this);
+        cout << name << " 在戰鬥中使用了道具: [" << theItem.getName() << "]!" << endl;
+        theItem.use(*this); // 戰鬥中預設對自己使用
+        return true;
+    }
+
+    // ✨ 新增：脫戰專用的道具使用函式 (支援對隊友使用)
+    bool Player::useItemOutOfBattle(int itemCode, Player& target) {
+        auto it = items.find(itemCode);
+        if (it == items.end()) {
+            cout << "背包裡沒有這個道具。\n";
+            return false;
+        }
+
+        Item& theItem = items[itemCode];
+
+        if (!theItem.isAvailable()) {
+            cout << "道具數量不足。\n";
+            return false;
+        }
+
+        cout << "🏕️ 脫戰休整：" << name << " 對 " << target.getName() << " 使用了 [" << theItem.getName() << "]！" << endl;
+        theItem.use(target);
         return true;
     }
     void Player::takeEffect(EffectType& effectType, int effectTurns) {
