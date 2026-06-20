@@ -147,17 +147,17 @@ namespace RPG_Colaborate
             switch (targetType)
             {
             case SINGLE:
-                monsters[targetIndex]->takeEffect(effectType);
+                monsters[targetIndex]->takeEffect(effectType, effectTurns);
                 break;
             case SPREAD:
-                monsters[targetIndex]->takeEffect(effectType);
+                monsters[targetIndex]->takeEffect(effectType, effectTurns);
                 leftTargetIndex = targetIndex - 1;
                 while (leftTargetIndex >= 0 &&
                     (monsters[leftTargetIndex] == nullptr || !monsters[leftTargetIndex]->isAlive())) {
                     leftTargetIndex--;
                 }
                 if (leftTargetIndex > 0) {
-                    monsters[leftTargetIndex]->takeEffect(effectType);
+                    monsters[leftTargetIndex]->takeEffect(effectType, effectTurns);
                 }
 
                 rightTargetIndex = targetIndex + 1;
@@ -166,13 +166,13 @@ namespace RPG_Colaborate
                     rightTargetIndex++;
                 }
                 if (rightTargetIndex > 0) {
-                    monsters[rightTargetIndex]->takeEffect(effectType);
+                    monsters[rightTargetIndex]->takeEffect(effectType, effectTurns);
                 }
                 break;
             case AOE:
                 for (int i = 0; i < monsters.size(); i++) {
                     if (monsters[i] != nullptr && monsters[i]->isAlive()) {
-                        monsters[i]->takeEffect(effectType);
+                        monsters[i]->takeEffect(effectType, effectTurns);
                     }
                 }
                 break;
@@ -224,7 +224,7 @@ namespace RPG_Colaborate
         }
 
         if (isSpecial == SPECIAL) {
-            return;
+            user.triggerClassSpecial(*this, targetIndex, monsters, players);
         }
     }
 

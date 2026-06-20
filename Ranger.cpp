@@ -2,7 +2,9 @@
 #include <iostream>
 #include <cmath>
 #include <cstdlib>
+#include <vector>
 
+using std::vector;
 using std::cout;
 using std::endl;
 
@@ -12,7 +14,7 @@ namespace RPG_Colaborate {
     {
         job = "Ranger";
         skillbox[0] = new Skill("連續射擊", OWN, NONEH, CONTSHOOT, 2,
-            NONE, STATIC, NONE, NONE, NONE, NONE, NONE, attackPower, 0, 0, 30, 0, 4);
+            NONE, STATIC, NONE, NONE, NONE, NONE, SPECIAL, attackPower, 0, 0, 30, 0, 4);
         skillbox[1] = new Skill("假人操術", OWN, NONEH, SPACEGOAT, 3,
             NONE, STATIC, NONE, NONE, NONE, NONE, NONE, attackPower, 0, 0, 40, 0, 3);
         skillbox[2] = new Skill("萬箭齊發", SINGLE, NONEH, NONEE, 0,
@@ -38,7 +40,7 @@ namespace RPG_Colaborate {
     void Ranger::setCriticalRate(int newRate) { criticalRate = newRate; }
     void Ranger::setCriticalEffect(int newEffect) { criticalEffect = newEffect; }
 
-    void Ranger::attack(int targetIndex, vector<Monster*> monsters, vector<Player*> players) {
+    void Ranger::attack(int targetIndex, vector<Monster*>& monsters, vector<Player*>& players) {
         bool isBoss = (monsters[targetIndex]->getName().find("Boss") != string::npos);
         double multiplier = isBoss ? 1.5 : 1.0;
 
@@ -72,7 +74,7 @@ namespace RPG_Colaborate {
         }
     }
 
-    bool Ranger::useSkill(int skillNumber, int targetIndex, vector<Player*> players, vector<Monster*> monsters) {
+    bool Ranger::useSkill(int skillNumber, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters) {
         if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) return false;
 
         int mpRequired = skillbox[skillNumber]->getMpCost();
@@ -82,17 +84,24 @@ namespace RPG_Colaborate {
         }
 
         if (skillNumber == 0) { 
-            multiShotTurns = 2; 
             cout << " [Buff] Basic attacks become Triple Shot for 2 turns! (Crit Rate +30%)" << endl;
-            // 回傳 false 讓主迴圈不視為行動結束
-            return false; 
         } 
         else if (skillNumber == 1) { 
             cout << "🪵 [Hide] Summoned a Decoy to absorb incoming damage!" << endl;
-            // 實際減傷或阻擋交由引擎 SPACEGOAT 判定
         } 
         else if (skillNumber == 2) { 
             cout << " [Arrow Rain] Unleashing a barrage of arrows!" << endl;
+        }
+        
+        return Player::useSkill(skillNumber, targetIndex, players, monsters);
+    }
+
+    void Ranger::triggerClassSpecial(Skill& theSkill, int targetIndex, vector<Monster*>& monsters, vector<Player*>& players)
+    {
+        if (&theSkill == skillbox[0]) { 
+            this->takeEffect(FREEACTION, 1);
+        } 
+        else if (&theSkill == skillbox[2]) { 
             int currentCritRate = criticalRate + ((multiShotTurns > 0) ? 30 : 0); // 大招享受連射暴擊加成
             int bouncesLeft = 10;
 
@@ -109,7 +118,7 @@ namespace RPG_Colaborate {
             }
 
             // 剩餘發數在全體存活敵人中隨機彈射
-            std::vector<Monster*> aliveMonsters;
+            vector<Monster*> aliveMonsters;
             for (auto m : monsters) {
                 if (m != nullptr && m->isAlive()) aliveMonsters.push_back(m);
             }
@@ -134,6 +143,5 @@ namespace RPG_Colaborate {
                 randomTarget->takeDamage(arrowDamage);
             }
         }
-        return Player::useSkill(skillNumber, targetIndex, players, monsters);
     }
 }

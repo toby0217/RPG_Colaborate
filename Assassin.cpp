@@ -2,6 +2,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm> // For std::sort
+using std::vector;
 using std::sort;
 using std::cout;
 using std::endl;
@@ -17,7 +18,7 @@ namespace RPG_Colaborate {
         skillbox[1] = new Skill("Shadow Vanish", OWN, NONEH, HIDE, 1,
             NONE, STATIC, NONE, NONE, NONE, NONE, NONE, attackPower, 1.6, 0, 40, 0, 3);
         skillbox[2] = new Skill("Nightmare Reap", SINGLE, NONEH, NONEE, 0,
-            DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, NONE, attackPower, 2.5, 0, 60, 0, 6);
+            DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, SPECIAL, attackPower, 2.5, 0, 60, 0, 6);
     }
     Assassin::Assassin(string theName, int theMaxHp, int theMaxMp, int theAttackPower, int theDefense)
     : Player(theName, theMaxHp, theMaxMp, theAttackPower, theDefense), 
@@ -29,7 +30,7 @@ namespace RPG_Colaborate {
         skillbox[1] = new Skill("Shadow Vanish", OWN, NONEH, HIDE, 1,
             NONE, STATIC, NONE, NONE, NONE, NONE, NONE, attackPower, 1.6, 0, 40, 0, 3);
         skillbox[2] = new Skill("Nightmare Reap", SINGLE, NONEH, NONEE, 0,
-            DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, NONE, attackPower, 2.5, 0, 60, 0, 6);
+            DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, SPECIAL, attackPower, 2.5, 0, 60, 0, 6);
     }
 
     Assassin::~Assassin()
@@ -52,14 +53,14 @@ namespace RPG_Colaborate {
     void Assassin::setCriticalEffect(int newEffect) { criticalEffect = newEffect;}
 
     // 被動突襲
-    void Assassin::executeTurnActions(std::vector<Monster*>& monsterList) {
+    void Assassin::executeTurnActions(vector<Monster*>& monsters) {
         turnCounter++;
 
         // Trigger assault every 2 rounds
         if (turnCounter % 2 == 0) {
             // Filter out already defeated monsters
-            std::vector<Monster*> aliveMonsters;
-            for (auto monster : monsterList) {
+            vector<Monster*> aliveMonsters;
+            for (auto monster : monsters) {
                 if (monster != nullptr && monster->getHp() > 0) {
                     aliveMonsters.push_back(monster);
                 }
@@ -68,11 +69,11 @@ namespace RPG_Colaborate {
             if (aliveMonsters.empty()) return;
 
             // Sort monsters by HP in ascending order (Lowest HP first)
-            std::sort(aliveMonsters.begin(), aliveMonsters.end(), [](Monster* a, Monster* b) {
+            sort(aliveMonsters.begin(), aliveMonsters.end(), [](Monster* a, Monster* b) {
                 return a->getHp() < b->getHp();
             });
 
-            std::cout << "⚡ [Assassin Passive] Round " << turnCounter << ": Launching a surprise assault!" << std::endl;
+            cout << "⚡ [Assassin Passive] Round " << turnCounter << ": Launching a surprise assault!" << endl;
 
             // Attack up to 2 monsters with the lowest HP
             int targetsAttacked = 0;
@@ -87,7 +88,13 @@ namespace RPG_Colaborate {
         }
     }
 
-    bool Assassin::useSkill(int skillNumber, int targetIndex, vector<Player*> players, vector<Monster*> monsters)
+    void Assassin::attack(int targetIndex, vector<Monster*>& monsters, vector<Player*>& players)
+    {
+        Player::attack(targetIndex, monsters, players);
+        executeTurnActions(monsters);
+    }
+
+    bool Assassin::useSkill(int skillNumber, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters)
     {
         if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) return false;
 
@@ -125,5 +132,21 @@ namespace RPG_Colaborate {
             }
         }
         return success;
+    }
+
+    void Assassin::triggerClassSpecial(Skill& theSkill, int targetIndex, vector<Monster*>& monsters, vector<Player*>& players)
+    {
+        if (&theSkill == skillbox[2] && !monsters[targetIndex]->isAlive()) {
+            cout << "💀 [Nightmare Reap] Target executed! Skill cooldown reset and MP refunded. You may act again!" << endl;
+            // 回復 MP
+            mp += skillbox[2]->getMpCost();
+            if (mp > maxMp) mp = maxMp;
+            skillbox[2]->setCD(0);
+
+            this->takeEffect(FREEACTION, 1);
+                
+            // 重置 CD 邏輯 (需在 BattleManager 的技能冷卻系統配合，這裡先重置 Skill 本身狀態若有)
+            // theBattleManager.triggerFreeAction(*this); // 示意：這部分通常由 BattleManager 偵測回傳值或狀態來決定
+        }
     }
 }

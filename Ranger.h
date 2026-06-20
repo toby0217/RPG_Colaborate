@@ -6,6 +6,8 @@
 #include "Monster.h"
 #include <vector>
 
+using std::vector;
+
 namespace RPG_Colaborate {
     class Ranger : public Player {
     private:
@@ -28,10 +30,11 @@ namespace RPG_Colaborate {
         void updateBuffStatus();
 
         // 覆寫普攻：處理對 Boss 增傷 50% 以及 連續射擊 (三連射與暴擊)
-        void attack(int targetIndex, vector<Monster*> monsters, vector<Player*> players) override;
+        void attack(int targetIndex, vector<Monster*>& monsters, vector<Player*>& players) override;
 
         // 覆寫使用技能：攔截並實作遊俠特有技能邏輯
-        bool useSkill(int skillNumber, int targetIndex, vector<Player*> players, vector<Monster*> monsters) override;
+        bool useSkill(int skillNumber, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters) override;
+        void triggerClassSpecial(Skill& theSkill, int targetIndex, vector<Monster*>& monsters, vector<Player*>& players);
     };
 }
 

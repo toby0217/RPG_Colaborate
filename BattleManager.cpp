@@ -31,7 +31,7 @@ namespace RPG_Colaborate
             
             // 第二行：狀態顯示區 (正負面狀態分離)
             // 假設寫了 getBuffs() 和 getDebuffs()
-            cout << "Buff:[" << players[i]->getBuffs() << "] Debuff:[" << players[i]->getDebuffs() << "]";
+            //cout << "Buff:[" << players[i]->getEffects() << "] Debuff:[" << players[i]->getEffects() << "]";
             
             cout << "               "; // 中間排版空格
             

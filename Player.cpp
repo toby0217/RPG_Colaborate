@@ -64,7 +64,7 @@ namespace RPG_Colaborate
 
     // 1. Basic Attack(已調整)
     // 發動普攻，然後怪物受到傷害
-    void Player::attack(int targetIndex, vector<Monster*> monsters, vector<Player*> players) {
+    void Player::attack(int targetIndex, vector<Monster*>& monsters, vector<Player*>& players) {
         cout << name << " performs a basic attack!" << endl;
         monsters[targetIndex]->takeDamage(attackPower);
     }
@@ -111,20 +111,20 @@ namespace RPG_Colaborate
         theItem.use(*this);
         return true;
     }
-    void Player::takeEffect(EffectType& effectType, int effectTurns) {
+    void Player::takeEffect(const EffectType& effectType, int effectTurns) {
         // 記錄狀態與對應的回合數
         StatusEffectList[effectType] = effectTurns;
         cout << "✨ " << name << " is now affected by status effect!" << endl;
     }
 
     // 實作空殼的特殊觸發，讓子類別去覆寫
-    void Player::triggerClassSpecial(EffectType& type) {
+    void Player::triggerClassSpecial(Skill& theSkill, int targetIndex, vector<Monster*>& monsters, vector<Player*>& players) {
         // Default player does nothing special
     }
 
     // 4. Use Skill (使用技能)(已調整)
     // 實作技能使用 (加入耗血邏輯)
-    bool Player::useSkill(int skillNumber, int targetIndex, vector<Player*> players, vector<Monster*> monsters)
+    bool Player::useSkill(int skillNumber, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters)
     {
         if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) {
             cout << "The skill does not exist." << endl;

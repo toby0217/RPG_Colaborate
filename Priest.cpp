@@ -2,7 +2,9 @@
 #include "Skill.h"
 #include "Monster.h"
 #include <iostream>
+#include <vector>
 
+using std::vector;
 using std::cout;
 using std::endl;
 
@@ -11,9 +13,9 @@ namespace RPG_Colaborate {
     Priest::Priest() : Player(), canRevive(true) {
         job = "Priest";
         skillbox[0] = new Skill("Retribution Ray", SINGLE, OWNH, NONEE, 0,
-            DAMAGE, NONE, NONE, NONE, HEAL, NONE, NONE, attackPower, 2.25, 15, 30, 0, 2);
+            DAMAGE, NONE, NONE, NONE, HEAL, NONE, SPECIAL, attackPower, 2.25, 15, 30, 0, 2);
         skillbox[1] = new Skill("Healing Art", TEAM, TEAMH, STRENGTH, 2,
-            NONE, NONE, BUFF, NONE, HEAL, NONE, NONE, attackPower, 0, 40, 50, 0, 4);                    
+            NONE, NONE, BUFF, NONE, HEAL, NONE, SPECIAL, attackPower, 0, 40, 50, 0, 4);                    
         skillbox[2] = new Skill("Divine Resurrection", SINGLE, NONEH, NONEE, 0,
             NONE, NONE, NONE, NONE, NONE, REVIVE, NONE, attackPower, 0, 0, 90, 0, 20);
     }
@@ -38,7 +40,7 @@ namespace RPG_Colaborate {
         }
     }
 
-    void Priest::triggerPassiveHeal(std::vector<Player*>& teammates) {
+    void Priest::triggerPassiveHeal(vector<Player*>& teammates) {
         if (teammates.empty()) return;
         
         Player* lowestTarget = nullptr;
@@ -62,14 +64,14 @@ namespace RPG_Colaborate {
         }
     }
 
-    void Priest::attack(int targetIndex, vector<Monster*> monsters, vector<Player*> players) {
+    void Priest::attack(int targetIndex, vector<Monster*>& monsters, vector<Player*>& players) {
         // 呼叫父類普攻
         Player::attack(targetIndex, monsters, players);
         // 普攻後觸發被動回血
         triggerPassiveHeal(players);
     }
 
-    bool Priest::useSkill(int skillNumber, int targetIndex, vector<Player*> players, vector<Monster*> monsters) {
+    bool Priest::useSkill(int skillNumber, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters) {
         if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) return false;
 
         int mpRequired = skillbox[skillNumber]->getMpCost();
@@ -93,14 +95,13 @@ namespace RPG_Colaborate {
             cout << "🕊️ [Priest]: \"May the holy light bless us all.\"" << endl;
         }
 
-        // 呼叫父類執行技能
-        bool success = Player::useSkill(skillNumber, targetIndex, players, monsters);
+        return Player::useSkill(skillNumber, targetIndex, players, monsters);
+    }
 
-        // 第一、二技能施放成功後，觸發被動回血
-        if (success && (skillNumber == 0 || skillNumber == 1)) {
+    void Priest::triggerClassSpecial(Skill& theSkill, int targetIndex, vector<Monster*>& monsters, vector<Player*>& players)
+    {
+        if (&theSkill == skillbox[0] || &theSkill == skillbox[1]) {
             triggerPassiveHeal(players);
         }
-
-        return success;
     }
 }

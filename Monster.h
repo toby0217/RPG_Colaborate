@@ -55,7 +55,8 @@ namespace RPG_Colaborate
         string getBuffs();
         string getDebuffs();
 
-        void takeEffect(EffectType effectType);
+        void takeEffect(EffectType effectType, int effectTurns);
+        int getEffects(EffectType effectType);
     };
 }
 

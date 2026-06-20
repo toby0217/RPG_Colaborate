@@ -56,22 +56,21 @@ namespace RPG_Colaborate
         bool consumeMp(int amount);
 
         // Core combat and interaction actions
-        virtual void attack(int targetIndex, vector<Monster*> monsters, vector<Player*> players);
+        virtual void attack(int targetIndex, vector<Monster*>& monsters, vector<Player*>& players);
         virtual void takeDamage(int damage);
         bool useItem(int itemCode);
-        virtual bool useSkill(int skillNumber, int targetIndex, vector<Player*> players, vector<Monster*> monsters);
+        virtual bool useSkill(int skillNumber, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters);
         bool isAlive();
 
         // 在 public: 底下找地方補上這兩行
         void heal(int amount);
         //void restoreMp(int amount);
 
-        string getBuffs();
-        string getDebuffs();
+        int getEffects(const EffectType& effectType);
 
-        void takeEffect(EffectType& effectType, int effectTurns);
+        void takeEffect(const EffectType& effectType, int effectTurns);
         void reviveWithHp(int reviveHp);
-        virtual void triggerClassSpecial(EffectType& type);
+        virtual void triggerClassSpecial(Skill& theSkill, int targetIndex, vector<Monster*>& monsters, vector<Player*>& players);
     };
 }
 

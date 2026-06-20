@@ -79,7 +79,7 @@ namespace RPG_Colaborate {
         StatusEffectList[COUNTERATTACK] = -1;
     }
 
-    bool Berserker::useSkill(int skillNumber, int targetIndex, vector<Player*> players, vector<Monster*> monsters) {
+    bool Berserker::useSkill(int skillNumber, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters) {
         if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) return false;
 
         int mpRequired = skillbox[skillNumber]->getMpCost();

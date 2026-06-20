@@ -27,7 +27,7 @@ namespace RPG_Colaborate {
         void takeDamage(int damage) override;
 
         // 技能施放
-        bool useSkill(int skillNumber, int targetIndex, vector<Player*> players, vector<Monster*> monsters) override;
+        bool useSkill(int skillNumber, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters) override;
 
         // 供戰場檢測到「持有反擊狀態且受擊」時，向下呼叫的反擊函式
         void triggerCounterAttack(vector<Monster*> monsters);
