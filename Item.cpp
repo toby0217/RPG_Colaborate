@@ -32,7 +32,7 @@ namespace RPG_Colaborate
         if (quantity < 0) quantity = 0; // 避免數量變成負數
     }
     //這邊底下是新增的部分
-    void Item::use(Player& target) {
+    void Item::use(Player& target, vector<Monster*>* monsters) {
         if (quantity <= 0) {
             cout << "X [" << name << "] 數量不足，無法使用！\n";
             return;
@@ -40,13 +40,13 @@ namespace RPG_Colaborate
 
         // 蘇生之露特例：對活著的人無效
         if (type == "Revive" && target.isAlive()) {
-            cout << "⚠️ " << target.getName() << " 還活蹦亂跳的，不需要使用蘇生之露！\n";
+            cout << target.getName() << " 還活蹦亂跳的，不需要使用蘇生之露！\n";
             return; // 不扣除數量直接中斷
         }
 
         quantity--; // 扣除數量
 
-        // 根據道具類型發動效果
+        // -- 原本的恢復道具 --
         if (type == "Heal_HP") {
             target.heal(effectValue); 
         } 
@@ -54,10 +54,44 @@ namespace RPG_Colaborate
             int newMp = target.getMp() + effectValue;
             if (newMp > target.getMaxMp()) newMp = target.getMaxMp();
             target.setMp(newMp);
-            cout << target.getName() << " 回復了 " << effectValue << " 點 MP！(目前 MP: " << target.getMp() << "/" << target.getMaxMp() << ")\n";
+            cout  << target.getName() << " 回復了 " << effectValue << " 點 MP！\n";
         } 
         else if (type == "Revive") {
             target.reviveWithHp(effectValue);
+        }
+        // -- 新增：脫戰 Buff 道具 --
+        else if (type == "Strength") {
+            target.applyStrengthBuff(effectValue);
+        }
+        else if (type == "Swift") {
+            target.applySwiftBuff();
+        }
+        else if (type == "Calamity") {
+            target.applyCalamityBuff();
+        }
+        // --  新增：戰鬥中道具 --
+        else if (type == "ScorchingSun") {
+            if (monsters != nullptr) {
+                cout << " 烈日凌空！熾熱的陽光灼燒所有敵人！\n";
+                for (auto m : *monsters) {
+                    if (m != nullptr && m->isAlive()) {
+                        int missingHp = m->getMaxHp() - m->getHp();
+                        if (missingHp > 0) {
+                            m->takeDamage(missingHp);
+                        } else {
+                            cout << m->getName() << " 處於滿血狀態，毫髮無傷！\n";
+                        }
+                    }
+                }
+            } else {
+                cout << "烈日凌空只能在戰鬥中使用！\n";
+            }
+        }
+        else if (type == "GoldenBell") {
+            target.applyGoldenBell();
+        }
+        else if (type == "LastGasp") {
+            target.applyLastGasp();
         }
     }
         // 35備註:需要等確認所有Item型別才能繼續寫
