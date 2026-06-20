@@ -2,11 +2,14 @@
 #define ITEM_H
 
 #include <string>
+#include <vector>
 using std::string;
+using std::vector;
 
 namespace RPG_Colaborate
 {
     class Player;
+    class Monster;
 
     class Item
     {
@@ -36,8 +39,8 @@ namespace RPG_Colaborate
         void setEffectValue(int newValue);
         void setQuantity(int newQuantity);
 
-        // 使用道具 (參數改為 target，方便對隊友使用)
-        void use(Player& target);
+        // 使用道具 (參數改為 target，方便對隊友使用) 加入 monsters 指標（預設為 nullptr，讓脫戰使用時不會報錯
+        void use(Player& target,  vector<Monster*>* monsters = nullptr);
         void showInfo() const;
         bool isAvailable() const;
     };
