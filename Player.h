@@ -59,6 +59,9 @@ namespace RPG_Colaborate
         virtual void attack(int targetIndex, vector<Monster*> monsters, vector<Player*> players);
         virtual void takeDamage(int damage);
         bool useItem(int itemCode);
+
+        bool useItemOutOfBattle(int itemCode, Player& target);
+
         virtual bool useSkill(int skillNumber, int targetIndex, vector<Player*> players, vector<Monster*> monsters);
         bool isAlive();
 
