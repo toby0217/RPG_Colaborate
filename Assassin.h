@@ -31,6 +31,8 @@ namespace RPG_Colaborate {
         // Call this at the end of every turn
         void executeTurnActions(vector<Monster*>& monsterList);
 
+        // ✨ 新增覆寫普攻，讓刺客也能觸發暴擊與災厄之手 Buff
+        void attack(int targetIndex, vector<Monster*> monsters, vector<Player*> players) override;
         // 覆寫 useSkill 以實現大招重置
         bool useSkill(int skillNumber, int targetIndex, vector<Player*> players, vector<Monster*> monsters) override;
     };
