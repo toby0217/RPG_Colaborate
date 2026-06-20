@@ -7,14 +7,13 @@ using std::endl;
 
 namespace RPG_Colaborate
 {
-    // 建構子 (Constructor)
-    // 初始化清單 (Initializer list) 
-    // 在 Item 類別中新增這個
-    Item::Item() : name("Empty"), type("None"), effectValue(0), quantity(0) {}
-    Item::Item(string name, string type, int effectValue, int quantity)
-        : name(name), type(type), effectValue(effectValue), quantity(quantity) {}
+    // 建構子
+    Item::Item() : name("Empty"), type("None"), effectValue(0), quantity(0), usableInBattle(true) {}
+    
+    Item::Item(string name, string type, int effectValue, int quantity, bool usableInBattle)
+        : name(name), type(type), effectValue(effectValue), quantity(quantity), usableInBattle(usableInBattle) {}
 
-    // 解構子 (Destructor)
+    // 解構子
     Item::~Item() {}
 
     // --- Getters ---
@@ -22,6 +21,7 @@ namespace RPG_Colaborate
     string Item::getType() const { return type; }//道具類型(player.cpp裡預設類型有heal 那是不是可以再分出healmp 跟healhp)
     int Item::getEffectValue() const { return effectValue; }//道具效果值(像藥水的治療量之類的)
     int Item::getQuantity() const { return quantity; }//道具數量
+    bool Item::getUsableInBattle() const { return usableInBattle; }//戰鬥中是否可用
 
     // --- Setters ---
     void Item::setName(const std::string& newName) { name = newName; }
@@ -31,17 +31,35 @@ namespace RPG_Colaborate
         quantity = newQuantity; 
         if (quantity < 0) quantity = 0; // 避免數量變成負數
     }
-
-    void Item::use(Player& user) {
-        //若無道具，則無法使用
+    //這邊底下是新增的部分
+    void Item::use(Player& target) {
         if (quantity <= 0) {
-            cout << "X " << name << " Insufficient amount, cannot use!\n";
+            cout << "X [" << name << "] 數量不足，無法使用！\n";
             return;
         }
 
-        cout << user.getName() << " is using item: " << name << endl;
+        // 蘇生之露特例：對活著的人無效
+        if (type == "Revive" && target.isAlive()) {
+            cout << "⚠️ " << target.getName() << " 還活蹦亂跳的，不需要使用蘇生之露！\n";
+            return; // 不扣除數量直接中斷
+        }
+
         quantity--; // 扣除數量
 
+        // 根據道具類型發動效果
+        if (type == "Heal_HP") {
+            target.heal(effectValue); 
+        } 
+        else if (type == "Heal_MP") {
+            int newMp = target.getMp() + effectValue;
+            if (newMp > target.getMaxMp()) newMp = target.getMaxMp();
+            target.setMp(newMp);
+            cout << target.getName() << " 回復了 " << effectValue << " 點 MP！(目前 MP: " << target.getMp() << "/" << target.getMaxMp() << ")\n";
+        } 
+        else if (type == "Revive") {
+            target.reviveWithHp(effectValue);
+        }
+    }
         // 35備註:需要等確認所有Item型別才能繼續寫
         // 根據王懷賢、宋金日的規劃：分為回血與回魔 (image_1.png)
         // Use lowercase or specific strings to check both type and name for safety
@@ -68,7 +86,7 @@ namespace RPG_Colaborate
         std::cout << "🩸 [Swan Song] Activated! HP reduced to 1, Attack power boosted to 300%!!!" << std::endl;
     }*/
     }
-
+    
     // 顯示道具資訊
     void Item::showInfo() const {
         cout << "--- Item Info ---" << endl;
@@ -76,6 +94,7 @@ namespace RPG_Colaborate
         cout << "Type: " << type << endl;
         cout << "Effect Value: " << effectValue << endl;
         cout << "Quantity: " << quantity << endl;
+        cout << "Usable in Battle: " << (usableInBattle ? "Yes" : "No") << endl;
         cout << "-----------------" << endl;
     }
 
