@@ -4,7 +4,7 @@
 
 namespace RPG_Colaborate{
     FrostSlime::FrostSlime():
-    Monster("VampireBat",100,10,10,0,0,MonsterRank::NORMAL){}
+    Monster("Frost Slime",100,10,10,0,0,MonsterRank::NORMAL){}
 
     FrostSlime::FrostSlime(const string& name,int hp,int attackPower,int rewardGold):
     Monster(name,hp,attackPower,rewardGold,20,0,MonsterRank::NORMAL){}
