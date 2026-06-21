@@ -59,7 +59,7 @@ namespace RPG_Colaborate
 
 
         //function
-        void attack(Player& player)const;
+        virtual void attack(Player& player);
         void takeDamage(int damage);
         bool isAlive()const;
         void showInfo()const;
