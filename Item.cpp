@@ -93,6 +93,24 @@ namespace RPG_Colaborate
         else if (type == "LastGasp") {
             target.applyLastGasp();
         }
+        else if (type == "ThunderFury") {
+            if (monsters != nullptr) {
+                cout << "⚡ 雷神之狂怒！天降狂雷轟擊全場敵人！\n";
+                for (auto m : *monsters) {
+                    if (m != nullptr && m->isAlive()) {
+                        cout << "⚡ 狂雷劈中 " << m->getName() << "！\n";
+                        m->takeDamage(effectValue); // effectValue 是你在建構道具時設定的傷害值
+                        
+                        // 如果怪被劈完還活著，就陷入觸電
+                        if (m->isAlive()) {
+                            m->takeEffect(SHOCKED, 1); 
+                        }
+                    }
+                }
+            } else {
+                cout << "⚠️ 雷神之狂怒只能在戰鬥中使用！\n";
+            }
+        }
     }
         // 35備註:需要等確認所有Item型別才能繼續寫
         // 根據王懷賢、宋金日的規劃：分為回血與回魔 (image_1.png)
