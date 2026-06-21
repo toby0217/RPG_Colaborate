@@ -42,7 +42,9 @@ namespace RPG_Colaborate {
         bool isBoss = (monsters[targetIndex]->getName().find("Boss") != string::npos);
         double multiplier = isBoss ? 1.5 : 1.0;
 
-        int currentCritRate = criticalRate + ((StatusEffectList[CONTSHOOT] >= 0) ? 30 : 0);
+        // ✨ 加入災厄之手狀態的 getTempCritRateBonus() 與 getTempCritEffectBonus()
+        int currentCritRate = criticalRate + getTempCritRateBonus() + ((StatusEffectList[CONTSHOOT] >= 0) ? 30 : 0);
+        int currentCritEffect = criticalEffect + getTempCritEffectBonus();
 
         if (isBoss) {
             cout << " [Ranger Passive] Locked onto Boss! Damage increased by 50%!" << endl;
@@ -93,7 +95,10 @@ namespace RPG_Colaborate {
         } 
         else if (skillNumber == 2) { 
             cout << " [Arrow Rain] Unleashing a barrage of arrows!" << endl;
-            int currentCritRate = criticalRate + ((multiShotTurns > 0) ? 30 : 0); // 大招享受連射暴擊加成
+            
+            // ✨ 大招同樣支援災厄之手加成
+            int currentCritRate = criticalRate + getTempCritRateBonus() + ((multiShotTurns > 0) ? 30 : 0); 
+            int currentCritEffect = criticalEffect + getTempCritEffectBonus();
             int bouncesLeft = 10;
 
             // 第一發優先命中主目標

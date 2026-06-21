@@ -23,6 +23,9 @@ namespace RPG_Colaborate {
         void setCriticalRate(int newRate);
         void setCriticalEffect(int newEffect);
 
+        // ✨ 新增普攻覆寫，讓狂戰士吃得到暴擊加成
+        void attack(int targetIndex, vector<Monster*> monsters, vector<Player*> players) override;
+
         // 覆寫受傷：只保留被動回血邏輯
         void takeDamage(int damage) override;
 

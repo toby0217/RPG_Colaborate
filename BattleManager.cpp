@@ -43,6 +43,16 @@ namespace RPG_Colaborate
     }
 
     void BattleManager::playerTurn(Player& currentPlayer) {
+        // 回合開始：遞減金鐘罩無敵回合
+        currentPlayer.decrementInvincibleTurns();
+
+        // 檢查是否持有迅捷藥水 Buff，決定迴圈次數 (連續行動)
+        int actionCount = currentPlayer.consumeSwiftBuff() ? 2 : 1;
+
+        for (int act = 0; act < actionCount; act++) {
+            if (act == 1) {
+                cout << "\n " << currentPlayer.getName() << " 觸發迅捷藥水，進行第二次行動！\n";
+            }
         bool actionCompleted = false;
     
         do 
@@ -63,12 +73,13 @@ namespace RPG_Colaborate
                 actionCompleted = currentPlayer.useSkill(skillIdx, currentTargetIdx, players, monsters); 
             }
             else if (choice == 'i' || choice == 'I') {
-                cout << "請輸入要使用的道具代碼: ";
-                int itemCode;
-                cin >> itemCode;
-                currentPlayer.useItem(itemCode); // 道具庫是玩家私有的，直接呼叫
-                actionCompleted = false; // 使用道具不消耗回合，繼續選！
-            }
+                    cout << "請輸入要使用的道具代碼: ";
+                    int itemCode;
+                    cin >> itemCode;
+                    //  修正：將戰場上的怪物列表傳給道具，供「烈日凌空」等全體道具使用
+                    currentPlayer.useItem(itemCode, monsters); 
+                    actionCompleted = false; // 使用道具不消耗回合
+                }
             else if (choice == 't' || choice == 'T') {
                 do {
                     currentTargetIdx = (currentTargetIdx + 1) % monsters.size();
@@ -80,5 +91,11 @@ namespace RPG_Colaborate
                 actionCompleted = false;
             }
         } while (!actionCompleted);
+
+        //  當這一次行動確實完成後，解除絕唱的 300% 攻擊力加成
+        if (currentPlayer.checkAndConsumeLastGasp()) {
+            currentPlayer.setAttackPower(currentPlayer.getAttackPower() / 4);
+            cout << "絕唱之力已釋放，攻擊力恢復正常。\n";
+        }
     }
 }

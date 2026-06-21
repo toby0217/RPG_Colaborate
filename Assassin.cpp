@@ -51,6 +51,20 @@ namespace RPG_Colaborate {
     void Assassin::setCriticalRate(int newRate) { criticalRate = newRate; }
     void Assassin::setCriticalEffect(int newEffect) { criticalEffect = newEffect;}
 
+    //  新增：實作刺客的專屬普攻（支援暴擊與災厄之手加成）
+    void Assassin::attack(int targetIndex, vector<Monster*> monsters, vector<Player*> players) {
+        int currentCritRate = criticalRate + getTempCritRateBonus();
+        int currentCritEffect = criticalEffect + getTempCritEffectBonus();
+
+        int finalDamage = attackPower;
+        if (rand() % 100 < currentCritRate) {
+            finalDamage = finalDamage * currentCritEffect / 100;
+            cout << " Critical Hit! ";
+        }
+        cout << name << " performs a precise assassination strike on " << monsters[targetIndex]->getName() << "!" << endl;
+        monsters[targetIndex]->takeDamage(finalDamage);
+    }
+
     // 被動突襲
     void Assassin::executeTurnActions(std::vector<Monster*>& monsterList) {
         turnCounter++;

@@ -18,20 +18,17 @@ namespace RPG_Colaborate {
         Assassin(string theName, int theMaxHp, int theMaxMp, int theAttackPower, int theDefense);
         ~Assassin();
 
-        // getters
         int getCriticalRate() const;
         int getCriticalEffect() const;
         int getTurnCounter() const;
 
-        // setters
         void setCriticalRate(int newRate);
         void setCriticalEffect(int newEffect);
-        // turn counter should not be set by outside
 
-        // Call this at the end of every turn
         void executeTurnActions(vector<Monster*>& monsterList);
 
-        // 覆寫 useSkill 以實現大招重置
+        //  新增覆寫普攻，讓刺客也能觸發暴擊與災厄之手 Buff
+        void attack(int targetIndex, vector<Monster*> monsters, vector<Player*> players) override;
         bool useSkill(int skillNumber, int targetIndex, vector<Player*> players, vector<Monster*> monsters) override;
     };
 }

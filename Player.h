@@ -29,6 +29,15 @@ namespace RPG_Colaborate
         map<int, Item> items;
         Skill* skillbox[3];
         map<EffectType, int> StatusEffectList;
+
+        // ✨ 新增道具狀態變數
+        int tempAtkBonus = 0;
+        bool hasSwiftBuff = false;
+        int invincibleTurns = 0;
+        bool hasLastGasp = false;
+        int tempCritRateBonus = 0;
+        int tempCritEffectBonus = 0;
+
     public:
         Player();
         Player(string theName, int theMaxHp, int theMaxMp, int theAttackPower, int theDefense);
@@ -58,7 +67,11 @@ namespace RPG_Colaborate
         // Core combat and interaction actions
         virtual void attack(int targetIndex, vector<Monster*> monsters, vector<Player*> players);
         virtual void takeDamage(int damage);
-        bool useItem(int itemCode);
+
+        //  修改：加入 monsters 以支援全體攻擊道具
+        bool useItem(int itemCode, vector<Monster*>& monsters); 
+        bool useItemOutOfBattle(int itemCode, Player& target);
+
         virtual bool useSkill(int skillNumber, int targetIndex, vector<Player*> players, vector<Monster*> monsters);
         bool isAlive();
 
@@ -72,6 +85,19 @@ namespace RPG_Colaborate
         void takeEffect(EffectType& effectType, int effectTurns);
         void reviveWithHp(int reviveHp);
         virtual void triggerClassSpecial(EffectType& type);
+
+        // 新增道具狀態操作函式
+        void applyStrengthBuff(int amount);
+        void applySwiftBuff();
+        bool consumeSwiftBuff();
+        void applyGoldenBell();
+        void decrementInvincibleTurns();
+        void applyLastGasp();
+        bool checkAndConsumeLastGasp();
+        void applyCalamityBuff();
+        int getTempCritRateBonus() const;
+        int getTempCritEffectBonus() const;
+        void clearBattleBuffs(); // 戰鬥結束後呼叫，清除跨場 Buff
     };
 }
 

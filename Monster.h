@@ -55,7 +55,10 @@ namespace RPG_Colaborate
         string getBuffs();
         string getDebuffs();
 
-        void takeEffect(EffectType effectType);
+        //  修改：補上 int turns 參數，並新增檢查與扣減狀態的函式
+        void takeEffect(EffectType effectType, int turns);
+        void decrementStatusEffects();
+        bool isShocked();
     };
 }
 
