@@ -44,8 +44,10 @@ namespace RPG_Colaborate {
         bool isElite = (monsters[targetIndex]->getRank() == ELITE || monsters[targetIndex]->getRank() == BOSS);
         double multiplier = isElite ? 1.5 : 1.0;
 
-        int currentCritRate = criticalRate + ((StatusEffectList[CONTSHOOT] >= 0) ? 30 : 0);
-
+       // ✨ 加入災厄之手狀態的 getTempCritRateBonus() 與 getTempCritEffectBonus()
+        int currentCritRate = criticalRate + getTempCritRateBonus() + ((StatusEffectList[CONTSHOOT] >= 0) ? 30 : 0);
+        int currentCritEffect = criticalEffect + getTempCritEffectBonus();
+        
         if (isElite) {
             cout << " [Ranger Passive] Locked onto Boss! Damage increased by 50%!" << endl;
         }
@@ -101,7 +103,9 @@ namespace RPG_Colaborate {
             this->takeEffect(FREEACTION, 1);
         } 
         else if (&theSkill == skillbox[2]) { 
-            int currentCritRate = criticalRate + ((multiShotTurns > 0) ? 30 : 0); // 大招享受連射暴擊加成
+             // ✨ 大招同樣支援災厄之手加成
+            int currentCritRate = criticalRate + getTempCritRateBonus() + ((multiShotTurns > 0) ? 30 : 0); 
+            int currentCritEffect = criticalEffect + getTempCritEffectBonus();
             int bouncesLeft = 10;
 
             // 第一發優先命中主目標

@@ -29,6 +29,9 @@ namespace RPG_Colaborate {
         void setCriticalRate(int newRate);
         void setCriticalEffect(int newEffect);
 
+        //  宣告覆寫的普攻
+        void attack(int targetIndex, vector<Monster*> monsters, vector<Player*> players) override;
+        
         // Override takeDamage for flat damage reduction (Knight's passive)
         void takeDamage(int damage);
         bool useSkill(int skillNumber, int targetIndex, vector<Player*> players, vector<Monster*> monsters);
