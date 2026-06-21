@@ -98,12 +98,31 @@ namespace RPG_Colaborate
         cout<<"Monster reward gold:"<<rewardGold<<endl;
     }
 
-        // 2. 承受狀態異常（例如：被施加 BURN 3 回合）
-    void Monster::takeEffect(EffectType effectType, int effectTurns) {
+       
+   
+    // 新增這三個狀態管理函式by 王懷賢這個是那個閃電道具的
+     // 2. 承受狀態異常（例如：被施加 BURN 3 回合）
+    void Monster::takeEffect(EffectType effectType, int turns) {
         // 假設你在 Monster.h 裡的 map 變數叫做 effects (即 map<EffectType, int> effects;)
         // 這裡直接將該狀態的回合數更新或寫入
-        StatusEffectList[effectType] = effectTurns; 
+        StatusEffectList[effectType] = turns;
+        if (effectType == SHOCKED) {
+        
+            cout << "⚡ " << name << " 陷入了觸電狀態，全身麻痺！\n";
+        }
     }
+    //底下是我原本寫的但我看已經有雛型就先弄成筆記
+    /*void Monster::decrementStatusEffects() {
+        for (auto& effect : StatusEffectList) {
+            if (effect.second > 0) {
+                effect.second--;
+            }
+        }
+    }
+
+    bool Monster::isShocked() {
+        return StatusEffectList[SHOCKED] > 0;
+    }*/
 
     // 3. 取得某個狀態剩餘的回合數
     int Monster::getEffects(EffectType effectType) {
