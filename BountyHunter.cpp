@@ -54,7 +54,7 @@ namespace RPG_Colaborate {
             if (!target->isAlive()) continue;
 
             // 子彈種類判定與傷害計算
-            int baseShotDamage = round(attackPower * 0.3); // 假設每發子彈基礎為30%攻擊力
+            int baseShotDamage = round(getAttackPower() * 0.3); // 假設每發子彈基礎為30%攻擊力
             int finalDamage = baseShotDamage;
 
             if (StatusEffectList[GOLDBULLET] >= 0) {
@@ -96,8 +96,14 @@ namespace RPG_Colaborate {
     }
 
     // 覆寫技能：處理金色子彈的「沉默」效果
-    bool BountyHunter::useSkill(int skillNumber, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters) {
-        if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) return false;
+    bool BountyHunter::useSkill(int skillInput, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters)
+    {
+        int skillNumber = skillInput - 1;
+        if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) {
+            cout << "The skill does not exist." << endl;
+            return false;
+        }
+
         if (StatusEffectList[GOLDBULLET] >= 0) {
             cout << "⚠️ " << name << " is currently locking loaded with Golden Bullets! Skills are disabled!" << endl;
             return false;
@@ -118,7 +124,7 @@ namespace RPG_Colaborate {
             cout << "💰 [Bounty Hunter]: \"Oh baby! Time for the jackpot! Smell the gold! HAHAHA!\"" << endl;
         }
 
-        return Player::useSkill(skillNumber, targetIndex, players, monsters);
+        return Player::useSkill(skillInput, targetIndex, players, monsters);
     }
 
     // 特殊判定

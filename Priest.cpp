@@ -71,8 +71,13 @@ namespace RPG_Colaborate {
         triggerPassiveHeal(players);
     }
 
-    bool Priest::useSkill(int skillNumber, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters) {
-        if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) return false;
+    bool Priest::useSkill(int skillInput, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters)
+    {
+        int skillNumber = skillInput - 1;
+        if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) {
+            cout << "The skill does not exist." << endl;
+            return false;
+        }
 
         int mpRequired = skillbox[skillNumber]->getMpCost();
         if (mp < mpRequired) {
@@ -95,7 +100,7 @@ namespace RPG_Colaborate {
             cout << "🕊️ [Priest]: \"Death shall not claim you today. Stand up, my friends!\"" << endl;
         }
 
-        return Player::useSkill(skillNumber, targetIndex, players, monsters);
+        return Player::useSkill(skillInput, targetIndex, players, monsters);
     }
 
     void Priest::triggerClassSpecial(Skill& theSkill, int targetIndex, vector<Monster*>& monsters, vector<Player*>& players)

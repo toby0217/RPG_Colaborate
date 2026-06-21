@@ -29,7 +29,7 @@ namespace RPG_Colaborate {
 
         // 覆寫父類別 Player 的虛擬函式
         virtual void attack(int targetIndex, std::vector<Monster*>& monsters, std::vector<Player*>& players) override;
-        virtual bool useSkill(int skillNumber, int targetIndex, std::vector<Player*>& players, std::vector<Monster*>& monsters) override;
+        virtual bool useSkill(int skillInput, int targetIndex, std::vector<Player*>& players, std::vector<Monster*>& monsters) override;
         virtual void triggerClassSpecial(Skill& theSkill, int targetIndex, std::vector<Monster*>& monsters, std::vector<Player*>& players) override;
 
         // 亡靈數量 Getter / Setter (利於系統外部讀取或面板顯示)

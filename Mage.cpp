@@ -49,7 +49,7 @@ namespace RPG_Colaborate {
         }
         if (leftTargetIndex >= 0) {
             cout << "Magic splashes onto " << monsters[leftTargetIndex]->getName() << "!" << endl;
-            monsters[leftTargetIndex]->takeDamage(round(0.5 * attackPower));
+            monsters[leftTargetIndex]->takeDamage(round(0.5 * getAttackPower()));
         }
 
         // 搜尋右側存活目標
@@ -59,13 +59,18 @@ namespace RPG_Colaborate {
         }
         if (rightTargetIndex < monsters.size()) {
             cout << "Magic splashes onto " << monsters[rightTargetIndex]->getName() << "!" << endl;
-            monsters[rightTargetIndex]->takeDamage(round(0.5 * attackPower));
+            monsters[rightTargetIndex]->takeDamage(round(0.5 * getAttackPower()));
         }
     }
 
     // 覆寫技能：處理技能條件與額外機率
-    bool Mage::useSkill(int skillNumber, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters) {
-        if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) return false;
+    bool Mage::useSkill(int skillInput, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters)
+    {
+        int skillNumber = skillInput - 1;
+        if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) {
+            cout << "The skill does not exist." << endl;
+            return false;
+        }
 
         int mpRequired = skillbox[skillNumber]->getMpCost();
         if (mp < mpRequired) {
@@ -82,7 +87,7 @@ namespace RPG_Colaborate {
             cout << "🌌 [Mage]: \"The time for darkness to fall has come... Dark Meteor!\"" << endl;
         }
 
-        return Player::useSkill(skillNumber, targetIndex, players, monsters);
+        return Player::useSkill(skillInput, targetIndex, players, monsters);
     }
     
     // 特殊判定: 元素引爆檢測
@@ -116,7 +121,7 @@ namespace RPG_Colaborate {
                         cout << "💥 [Elemental Detonation] Thermal shock occurs on " << m->getName() << "!" << endl;
                         
                         // 造成額外傷害 (依你平衡需求可調整倍率，此處預設為攻擊力 1.5 倍)
-                        int bonusDamage = round(attackPower * 1.5);
+                        int bonusDamage = round(getAttackPower() * 1.5);
                         m->takeDamage(bonusDamage);
 
                         // 清空燃燒與冰霜狀態
@@ -129,7 +134,7 @@ namespace RPG_Colaborate {
                     cout << "💥 [Elemental Detonation] Thermal shock occurs on " << m->getName() << "!" << endl;
                     
                     // 造成額外傷害 (依你平衡需求可調整倍率，此處預設為攻擊力 1.5 倍)
-                    int bonusDamage = round(attackPower * 1.5);
+                    int bonusDamage = round(getAttackPower() * 1.5);
                     m->takeDamage(bonusDamage);
 
                     // 清空燃燒與冰霜狀態

@@ -49,21 +49,34 @@ namespace RPG_Colaborate {
     void Knight::setCriticalEffect(int newEffect) { criticalEffect = newEffect;}
 
     void Knight::takeDamage(int damage, vector<Monster*>& monsters) {
+        int finalDamage = calculateFinalDamage(damage);
+
         // Knight's Passive: Damage reduction triggers when HP is below 50%
         if (hp < (maxHp / 2)) {
             cout << "🛡️ [Knight Passive] HP below 50%! Guard activated." << endl;
             // Reduce incoming damage by 30% (Takes only 70% of the damage)
-            Player::takeDamage(round(0.7 * damage), monsters);
+            finalDamage = round(0.7 * damage);
+        }
+        
+        if (getEffectTurns(PERSEVERANCE) > 0 && (hp - finalDamage) <= 0) {
+            hp = 1; // 🎯 強制鎖血在 1 點！
+            
+            // 自己攔截 UI 輸出，這樣就不會印出 0 血或死亡宣告了
+            cout << name << " takes " << finalDamage << " points of damage! (🛡️ Perseverance Mitigated!) " 
+                << "(Current HP: " << hp << "/" << maxHp << ")" << endl;
         }
         else {
-            // 🛠️ 補上這段，不然騎士滿血時會無敵！
             Player::takeDamage(damage, monsters);
         }
     }
 
-    bool Knight::useSkill(int skillNumber, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters)
+    bool Knight::useSkill(int skillInput, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters)
     {
-        if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) return false;
+        int skillNumber = skillInput - 1;
+        if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) {
+            cout << "The skill does not exist." << endl;
+            return false;
+        }
 
         int mpRequired = skillbox[skillNumber]->getMpCost();
         if (mp < mpRequired) {
@@ -81,6 +94,6 @@ namespace RPG_Colaborate {
         }
 
         // 呼叫父類的共通邏輯 (扣魔、扣血、呼叫 Skill::use)
-        return Player::useSkill(skillNumber, targetIndex, players, monsters);
+        return Player::useSkill(skillInput, targetIndex, players, monsters);
     }
 }

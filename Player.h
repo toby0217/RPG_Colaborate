@@ -39,7 +39,7 @@ namespace RPG_Colaborate
         string getJob() const;
         int getHp() const;
         int getMaxHp() const;
-        int getAttackPower() const;
+        int getAttackPower();
         int getMp() const;
         int getMaxMp() const;
         int getDefense() const;
@@ -54,21 +54,22 @@ namespace RPG_Colaborate
         void setDefense(int newDefense);
 
         bool consumeMp(int amount);
+        int calculateFinalDamage(int rawDamage);
 
         // Core combat and interaction actions
         virtual void attack(int targetIndex, vector<Monster*>& monsters, vector<Player*>& players);
         virtual void takeDamage(int damage, vector<Monster*>& monsters);
         bool useItem(int itemCode);
-        virtual bool useSkill(int skillNumber, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters);
+        virtual bool useSkill(int skillInput, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters);
         bool isAlive();
 
         // 在 public: 底下找地方補上這兩行
         void heal(int amount);
-        //void restoreMp(int amount);
-        
+        void restoreMp(int amount);
+
 
         void takeEffect(const EffectType& effectType, int effectTurns);
-        int getEffectTurns(const EffectType& effectType);
+        int getEffectTurns(const EffectType& effectType) const;
         void updateStatusEffects();
 
         

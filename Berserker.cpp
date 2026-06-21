@@ -67,7 +67,7 @@ namespace RPG_Colaborate {
         cout << "🪓 [Berserker]: \"You dare strike ME?! I'll feed your flesh to the crows!\"" << endl;
         cout << "🪓 [Behemoth Counter] " << name << " triggers a massive global counterattack!" << endl;
         
-        int counterDamage = round(attackPower * 1.2);
+        int counterDamage = round(getAttackPower() * 1.2);
         for (auto enemy : monsters) {
             if (enemy != nullptr && enemy->isAlive()) {
                 cout << " Countering " << enemy->getName() << "!" << endl;
@@ -84,8 +84,13 @@ namespace RPG_Colaborate {
         StatusEffectList[COUNTERATTACK] = 0;
     }
 
-    bool Berserker::useSkill(int skillNumber, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters) {
-        if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) return false;
+    bool Berserker::useSkill(int skillInput, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters)
+    {
+        int skillNumber = skillInput - 1;
+        if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) {
+            cout << "The skill does not exist." << endl;
+            return false;
+        }
 
         int mpRequired = skillbox[skillNumber]->getMpCost();
         if (mp < mpRequired) {
@@ -102,7 +107,7 @@ namespace RPG_Colaborate {
             cout << "👹 [Berserker]: \"GET OUT OF MY WAY! DIE! DIE! DIEEEEE!!!\"" << endl;
         }
 
-        return Player::useSkill(skillNumber, targetIndex, players, monsters);
+        return Player::useSkill(skillInput, targetIndex, players, monsters);
     }
 
     void Berserker::triggerClassSpecial(Skill& theSkill, int targetIndex, vector<Monster*>& monsters, vector<Player*>& players) {
@@ -118,7 +123,7 @@ namespace RPG_Colaborate {
                 damageMultiplier += (1.0 - hpRatio) * (1.5 / 0.8);
             }
 
-            int finalAoeDamage = round(attackPower * damageMultiplier);
+            int finalAoeDamage = round(getAttackPower() * damageMultiplier);
             cout << "Final damage multiplier: " << round(damageMultiplier * 100) << "%" << endl;
 
             for (auto enemy : monsters) {

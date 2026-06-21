@@ -14,7 +14,7 @@ namespace RPG_Colaborate
     Player::Player()
     : name("Player"), job("Unknown"), maxHp(1000), hp(maxHp), maxMp(100), mp(maxMp), attackPower(100) {}
     Player::Player(string theName, int theMaxHp, int theMaxMp, int theAttackPower, int theDefense) 
-    : name(theName), job("Unknown"), maxHp(maxHp), hp(maxHp), maxMp(maxMp), mp(maxMp), attackPower(attackPower) {}
+    : name(theName), job("Unknown"), maxHp(theMaxHp), hp(theMaxHp), maxMp(theMaxMp), mp(theMaxMp), attackPower(theAttackPower), defense(theDefense) {}
 
     // Destructor
     Player::~Player() {
@@ -32,7 +32,16 @@ namespace RPG_Colaborate
     string Player::getJob() const { return job; }
     int Player::getHp() const { return hp; }
     int Player::getMaxHp() const { return maxHp; }
-    int Player::getAttackPower() const { return attackPower; }
+    int Player::getAttackPower()
+    {
+        // 🎯 核心攔截：如果身上有牧師的增傷 Buff
+        if (getEffectTurns(STRENGTH) > 0) {
+            // 回傳放大後的動態攻擊力
+            return static_cast<int>(attackPower * 1.3);
+        }
+
+        return attackPower;
+    }
     int Player::getMp() const { return mp; }
     int Player::getMaxMp() const { return maxMp; }
     int Player::getDefense() const { return defense; }
@@ -52,8 +61,8 @@ namespace RPG_Colaborate
 
     bool Player::consumeMp(int cost) {
         if (mp >= cost) {
-            //mp -= cost;
-            //std::cout << name << " consumed " << cost << " MP! (remaining MP: " << mp << ")\n";
+            mp -= cost;
+            cout << name << " consumed " << cost << " MP! (remaining MP: " << mp << ")" << endl;
             return true;
         }
         else {
@@ -66,15 +75,22 @@ namespace RPG_Colaborate
     // 發動普攻，然後怪物受到傷害
     void Player::attack(int targetIndex, vector<Monster*>& monsters, vector<Player*>& players) {
         cout << name << " performs a basic attack!" << endl;
-        monsters[targetIndex]->takeDamage(attackPower);
+        monsters[targetIndex]->takeDamage(getAttackPower());
+    }
+
+    int Player::calculateFinalDamage(int rawDamage)
+    {
+        if(defense>0){
+            rawDamage = round(rawDamage * (1.0 - ( 1.0 * defense / (defense + 1000) )));
+        }
+
+        return rawDamage;
     }
 
     // 2. Take Damage (受到傷害)(已調整)
     // 減少生命值，若沒有存活則彈出死亡播報
     void Player::takeDamage(int damage, vector<Monster*>& monsters) {
-        if(defense>0){
-            damage = round(damage * (1.0 - ( 1.0 * defense / (defense + 100) )));
-        }
+        damage = calculateFinalDamage(damage);
         hp -= damage;
         if (hp < 0) {
             hp = 0; // Prevent HP from dropping below zero
@@ -111,21 +127,23 @@ namespace RPG_Colaborate
         theItem.use(*this);
         return true;
     }
+
     void Player::takeEffect(const EffectType& effectType, int effectTurns) {
         // 記錄狀態與對應的回合數
         StatusEffectList[effectType] = effectTurns;
-        cout << "✨ " << name << " is now affected by status effect!" << endl;
+        if (effectTurns > 0) {
+            cout << "✨ " << name << " is now affected by status effect: " << getEffectName(effectType) << "!" << endl;
+        }
+
     }
 
-    // 實作空殼的特殊觸發，讓子類別去覆寫
-    void Player::triggerClassSpecial(Skill& theSkill, int targetIndex, vector<Monster*>& monsters, vector<Player*>& players) {
-        // Default player does nothing special
-    }
+    
 
     // 4. Use Skill (使用技能)(已調整)
     // 實作技能使用 (加入耗血邏輯)
-    bool Player::useSkill(int skillNumber, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters)
+    bool Player::useSkill(int skillInput, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters)
     {
+        int skillNumber = skillInput - 1;
         if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) {
             cout << "The skill does not exist." << endl;
             return false;
@@ -134,6 +152,11 @@ namespace RPG_Colaborate
         int mpRequired = skillbox[skillNumber]->getMpCost();
         if (!consumeMp(mpRequired)) {
             cout << name << " does not have enough MP!" << endl;
+            return false;
+        }
+
+        if (skillbox[skillNumber]->getCurrentCD() > 0) {
+            cout << "The skill is still in CD!" << endl;
             return false;
         }
 
@@ -172,14 +195,68 @@ namespace RPG_Colaborate
         cout << "💚 " << name << " healed " << amount << " HP points! " << "(Current HP: " << hp << "/" << maxHp << ")" << endl;
     }
 
-    //void Player::restoreMp(int amount) {
-    //    mp += amount;
-    //    if (mp > maxMp) {
-    //        mp = maxMp; // 補魔不能超過最大魔力值
-    //    }
-    //    std::cout << "💙 " << name << " healed " << amount << " MP points. Current MP: " << mp << "/" << maxMp << "\n";
-    //}
+    void Player::restoreMp(int amount) {
+        mp += amount;
+        if (mp > maxMp) {
+            mp = maxMp; // 補魔不能超過最大魔力值
+        }
+        cout << "💠 " << name << " restored " << amount << " MP points. Current MP: " << mp << "/" << maxMp << endl;
+    }
 
+    int Player::getEffectTurns(const EffectType& effectType) const
+    {
+        // 使用 find 尋找關鍵字
+        auto it = StatusEffectList.find(effectType);
+        
+        // 如果找到了，回傳它紀錄的剩餘回合數
+        if (it != StatusEffectList.end()) {
+            return it->second;
+        }
+        
+        // 找不到代表沒有這個 Buff/Debuff，回傳 0
+        return 0;
+    }
+
+    void Player::updateStatusEffects() {
+        // 使用迭代器安全遍歷 Map
+        for (auto it = StatusEffectList.begin(); it != StatusEffectList.end(); ) {
+            // 防呆：如果原本就是 0 或是負數，直接剔除
+            if (it->second <= 0) {
+                it = StatusEffectList.erase(it);
+                continue;
+            }
+
+            // 🎯 【這裡處理玩家每回合結束的特殊結算】
+            // 例如：如果騎士沒有覆寫，也可以直接在這裡寫 PERSEVERANCE 的回血邏輯
+            // 騎士判定自己有沒有堅毅不倒
+            if (it->first == PERSEVERANCE && it->second == 1) {
+                // 1. 計算已損生命值 (Missing HP)
+                int missingHp = maxHp - hp;
+                
+                // 2. 計算 30% 的恢復量
+                int healAmount = static_cast<int>(missingHp * 0.30);
+                
+                // 3. 實際補血（因為是用已損血量去算，絕不可能超過 MaxHP）
+                hp += healAmount;
+                
+                cout << "💖 [Perseverance - Final Burst] As the protection fades, [" << name 
+                    << "] converts pure willpower into vitality, restoring 30% of missing HP (+" << healAmount 
+                    << " HP)! (Current HP: " << hp << "/" << maxHp << ")" << endl;
+            }
+            
+            // 狀態回合數減 1
+            it->second--;
+
+            // 檢查減完後是否過期
+            if (it->second == 0) {
+                // 假設你有寫一個 getEffectName() 轉換 Enum 到字串，方便輸出
+                cout << "✨ [" << name << "] 的 " << getEffectName(it->first) << " 效果結束了。\n";
+                it = StatusEffectList.erase(it); // 刪除並自動指向下一個元素
+            } else {
+                ++it; // 沒過期，正常指針往下走
+            }
+        }
+    }
 
     void Player::reviveWithHp(int reviveHp) {
         // 安全檢查：通常只有死掉的人可以被復活
@@ -195,6 +272,11 @@ namespace RPG_Colaborate
         } else {
             std::cout << name << " still alive, no need to revive!" << std::endl;
         }
+    }
+
+    // 實作空殼的特殊觸發，讓子類別去覆寫
+    void Player::triggerClassSpecial(Skill& theSkill, int targetIndex, vector<Monster*>& monsters, vector<Player*>& players) {
+        // Default player does nothing special
     }
 }
     

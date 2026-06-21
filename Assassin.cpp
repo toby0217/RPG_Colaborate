@@ -10,7 +10,7 @@ using std::endl;
 namespace RPG_Colaborate {
     // Constructors
     Assassin::Assassin()
-    : Player(), criticalRate(15), criticalEffect(200)
+    : Player(), criticalRate(15), criticalEffect(200), turnCounter(0)
     {
         job = "Assassin";
         skillbox[0] = new Skill("Cruel Kunai", SINGLE, NONEH, POISON, 2,
@@ -22,7 +22,7 @@ namespace RPG_Colaborate {
     }
     Assassin::Assassin(string theName, int theMaxHp, int theMaxMp, int theAttackPower, int theDefense)
     : Player(theName, theMaxHp, theMaxMp, theAttackPower, theDefense), 
-      criticalRate(15), criticalEffect(200)
+      criticalRate(15), criticalEffect(200), turnCounter(0)
     {
         job = "Assassin";
         skillbox[0] = new Skill("Cruel Kunai", SINGLE, NONEH, POISON, 2,
@@ -80,9 +80,9 @@ namespace RPG_Colaborate {
             for (auto target : aliveMonsters) {
                 if (targetsAttacked >= 2) break;
 
-                std::cout << "🗡️ Assailing " << target->getName() << " (Lowest HP target)!" << std::endl;
+                cout << "🗡️ Assailing " << target->getName() << " (Lowest HP target)!" << endl;
                 // Deal damage based on Assassin's attack power
-                target->takeDamage(attackPower); 
+                target->takeDamage(getAttackPower());
                 targetsAttacked++;
             }
         }
@@ -94,9 +94,13 @@ namespace RPG_Colaborate {
         executeTurnActions(monsters);
     }
 
-    bool Assassin::useSkill(int skillNumber, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters)
+    bool Assassin::useSkill(int skillInput, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters)
     {
-        if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) return false;
+        int skillNumber = skillInput - 1;
+        if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) {
+            cout << "The skill does not exist." << endl;
+            return false;
+        }
 
         int mpRequired = skillbox[skillNumber]->getMpCost();
         if (mp < mpRequired) {
@@ -113,7 +117,7 @@ namespace RPG_Colaborate {
             cout << "🗡️ [Assassin]: \"Sleep now, into the eternal nightmare.\"" << endl;
         }
 
-        return Player::useSkill(skillNumber, targetIndex, players, monsters);
+        return Player::useSkill(skillInput, targetIndex, players, monsters);
     }
 
     void Assassin::triggerClassSpecial(Skill& theSkill, int targetIndex, vector<Monster*>& monsters, vector<Player*>& players)
@@ -123,12 +127,11 @@ namespace RPG_Colaborate {
             // 回復 MP
             mp += skillbox[2]->getMpCost();
             if (mp > maxMp) mp = maxMp;
-            skillbox[2]->setCD(0);
+            skillbox[2]->setCurrentCD(0);
 
             takeEffect(FREEACTION, 1);
                 
             // 重置 CD 邏輯 (需在 BattleManager 的技能冷卻系統配合，這裡先重置 Skill 本身狀態若有)
-            // theBattleManager.triggerFreeAction(*this); // 示意：這部分通常由 BattleManager 偵測回傳值或狀態來決定
         }
     }
 }

@@ -52,7 +52,7 @@ namespace RPG_Colaborate {
 
         if (StatusEffectList[CONTSHOOT] >= 0) {
             for (int i = 1; i <= 3; i++) {
-                int finalDamage = round(0.6 * attackPower * multiplier);
+                int finalDamage = round(0.6 * getAttackPower() * multiplier);
                 if (rand() % 100 < currentCritRate) {
                     finalDamage = finalDamage * criticalEffect / 100;
                     cout << " Critical Hit! ";
@@ -64,7 +64,7 @@ namespace RPG_Colaborate {
             }
         }
         else {
-            int finalDamage = attackPower;
+            int finalDamage = getAttackPower();
             if (rand() % 100 < currentCritRate) {
                 finalDamage = finalDamage * criticalEffect / 100;
                 cout << " Critical Hit! ";
@@ -92,8 +92,13 @@ namespace RPG_Colaborate {
         }
     }
 
-    bool Ranger::useSkill(int skillNumber, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters) {
-        if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) return false;
+    bool Ranger::useSkill(int skillInput, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters)
+    {
+        int skillNumber = skillInput - 1;
+        if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) {
+            cout << "The skill does not exist." << endl;
+            return false;
+        }
 
         int mpRequired = skillbox[skillNumber]->getMpCost();
         if (mp < mpRequired) {
@@ -110,7 +115,7 @@ namespace RPG_Colaborate {
             cout << "🌧️ [Ranger]: \"Watch closely! This is full-coverage shooting with zero blind spots!\"" << endl;
         }
 
-        return Player::useSkill(skillNumber, targetIndex, players, monsters);
+        return Player::useSkill(skillInput, targetIndex, players, monsters);
     }
 
     void Ranger::triggerClassSpecial(Skill& theSkill, int targetIndex, vector<Monster*>& monsters, vector<Player*>& players)
@@ -127,7 +132,7 @@ namespace RPG_Colaborate {
 
             // 第一發優先命中主目標
             if (monsters[targetIndex] != nullptr && monsters[targetIndex]->isAlive()) {
-                int arrowDamage = attackPower;
+                int arrowDamage = getAttackPower();
                 if (rand() % 100 < currentCritRate) {
                     arrowDamage = arrowDamage * criticalEffect / 100;
                     cout << " Critical Hit! ";
@@ -154,7 +159,7 @@ namespace RPG_Colaborate {
                 }
 
                 Monster* randomTarget = aliveMonsters[rand() % aliveMonsters.size()];
-                int arrowDamage = attackPower;
+                int arrowDamage = getAttackPower();
                 if (rand() % 100 < currentCritRate) {
                     arrowDamage = arrowDamage * criticalEffect / 100;
                     cout << " Critical Hit! ";

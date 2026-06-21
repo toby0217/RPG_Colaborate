@@ -13,13 +13,10 @@ namespace RPG_Colaborate {
     Necromancer::Necromancer() : Player(), undeadCount(0)
     {
         job = "Necromancer";
-        // 技能1: 亡靈召喚 (無傷害，純召喚，自身狀態)
         skillbox[0] = new Skill("Raise Specter", OWN, NONEH, NONEE, 0,
             NONE, NONE, NONE, NONE, NONE, NONE, SPECIAL, attackPower, 0, 0, 30, 0, 3);
-        // 技能2: 靈魂割者 (單體傷害，降攻，具備斬殺機制)
-        skillbox[1] = new Skill("Soul Reaper", SINGLE, NONEH, WEAKEN, 2,
+        skillbox[1] = new Skill("Soul Reaper", SINGLE, NONEH, WEAKNESS, 2,
             DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, SPECIAL, attackPower, 1.2, 0, 30, 0, 4);
-        // 技能3: 亡者晚宴 (賦予自身強化狀態)
         skillbox[2] = new Skill("Macabre Feast", OWN, NONEH, FEAST, 3,
             NONE, STATIC, NONE, NONE, NONE, NONE, SPECIAL, attackPower, 0, 0, 60, 0, 5);
     }
@@ -28,12 +25,12 @@ namespace RPG_Colaborate {
     : Player(theName, theMaxHp, theMaxMp, theAttackPower, theDefense), undeadCount(0)
     {
         job = "Necromancer";
-        skillbox[0] = new Skill("亡靈召喚", OWN, NONEH, NONEE, 0,
+        skillbox[0] = new Skill("Raise Specter", OWN, NONEH, NONEE, 0,
             NONE, NONE, NONE, NONE, NONE, NONE, SPECIAL, attackPower, 0, 0, 30, 0, 3);
-        skillbox[1] = new Skill("靈魂割者", SINGLE, NONEH, WEAKEN, 2,
+        skillbox[1] = new Skill("Soul Reaper", SINGLE, NONEH, WEAKNESS, 2,
             DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, SPECIAL, attackPower, 1.2, 0, 30, 0, 4);
-        skillbox[2] = new Skill("亡者晚宴", OWN, NONEH, FEAST, 3,
-            NONE, STATIC, NONE, NONE, NONE, NONE, NONE, attackPower, 0, 0, 60, 0, 5);
+        skillbox[2] = new Skill("Macabre Feast", OWN, NONEH, FEAST, 3,
+            NONE, STATIC, NONE, NONE, NONE, NONE, SPECIAL, attackPower, 0, 0, 60, 0, 5);
     }
 
     // 亡靈追擊副程式
@@ -42,7 +39,7 @@ namespace RPG_Colaborate {
 
         // 判斷是否有「亡者晚宴」強化狀態 (假設原本傷害為攻擊力20%，強化後變40%)
         double multiplier = (StatusEffectList[FEAST] >= 0) ? 0.4 : 0.2;
-        int undeadDamage = round(attackPower * multiplier);
+        int undeadDamage = round(getAttackPower() * multiplier);
 
         cout << "💀 The spirits awaken! " << undeadCount << " Undead(s) launch their pursuit!" << endl;
 
@@ -75,8 +72,13 @@ namespace RPG_Colaborate {
     }
 
     // 覆寫使用技能 (為了在技能施放後觸發亡靈追擊)
-    bool Necromancer::useSkill(int skillNumber, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters) {
-        if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) return false;
+    bool Necromancer::useSkill(int skillInput, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters)
+    {
+        int skillNumber = skillInput - 1;
+        if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) {
+            cout << "The skill does not exist." << endl;
+            return false;
+        }
 
         int mpRequired = skillbox[skillNumber]->getMpCost();
         if (mp < mpRequired) {
@@ -93,7 +95,7 @@ namespace RPG_Colaborate {
             cout << "🍷 [Necromancer]: \"Eat up, my darling spirits. Look how entertaining our friends are being!\"" << endl;
         }
         
-        return Player::useSkill(skillNumber, targetIndex, players, monsters);
+        return Player::useSkill(skillInput, targetIndex, players, monsters);
     }
 
     // 特殊判定

@@ -2,7 +2,12 @@
 #define MONSTER_H
 
 #include<string>
+#include<vector>
+#include <map>
+#include "BattleManager.h"
 using std::string;
+using std::vector;
+using std::map;
 
 namespace RPG_Colaborate
 {
@@ -33,7 +38,7 @@ namespace RPG_Colaborate
     public:
         //建構子
         Monster();
-        Monster(const string& name,int hp,int attackPower,int rewardGold,int evadeRate,int defense, MonsterRank rank);
+        Monster(const string& theName,int theMaxHp,int theAttackPower,int theRewardGold,int theEvadeRate,int theDefense, MonsterRank theRank);
 
 
         //getters
@@ -58,8 +63,9 @@ namespace RPG_Colaborate
         void setRank(const MonsterRank& theRank);
 
 
+        int calculateFinalDamage(int rawDamage);
         //function
-        void attack(Player& player, vector<Monster*>& monsters)const;
+        virtual void attack(int targetIndex, vector<Player*>& players, vector<Monster*>& monsters);
         void takeDamage(int damage);
         bool isAlive()const;
         void showInfo()const;
@@ -67,8 +73,8 @@ namespace RPG_Colaborate
         string getBuffs();
         string getDebuffs();
 
-        void takeEffect(EffectType effectType, int effectTurns);
-        int getEffectTurns(EffectType effectType);
+        void takeEffect(const EffectType& effectType, int effectTurns);
+        int getEffectTurns(const EffectType& effectType) const;
         void updateStatusEffects();
     };
 }

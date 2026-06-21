@@ -14,6 +14,8 @@ using std::string;
 
 namespace RPG_Colaborate
 {
+    BattleManager::BattleManager(vector<Player*> AllPlayers, vector<Monster*> AllMonsters)
+    : players(AllPlayers), monsters(AllMonsters) {}
     void BattleManager::renderUI()
     {
         cout << "=================================================================\n";
@@ -83,6 +85,11 @@ namespace RPG_Colaborate
     
         do 
         {
+            // 在普攻或放技能前加入活體檢查
+            while (!monsters[currentTargetIdx]->isAlive()) {
+                currentTargetIdx = (currentTargetIdx + 1) % monsters.size();
+            }
+            
             renderUI();
 
             char choice;
@@ -122,10 +129,9 @@ namespace RPG_Colaborate
             if (actionCompleted) {
                 if (currentPlayer.getEffectTurns(FREEACTION) > 0) {
                     cout << "⚡ [" << currentPlayer.getName() << "] 觸發了『自由行動』！獲得額外連擊回合！\n";
-                    
-                    // 減少或移除 FREEACTION 狀態（由你的 Player 狀態管理函式處理）
-                    // currentPlayer.decreaseEffectDuration(FREEACTION, 1); 
-                    
+                    // 減少或移除 FREEACTION 狀態
+                    currentPlayer.takeEffect(FREEACTION, currentPlayer.getEffectTurns(FREEACTION)-1);
+
                     actionCompleted = false; // 關鍵：強行重置為 false，利用 do-while 重新回到選單開頭！
                 }
             }
@@ -150,11 +156,10 @@ namespace RPG_Colaborate
             int targetPlayerIdx = getValidMonsterTarget();
             if (targetPlayerIdx == -1) return; // 沒有活著的目標
 
-            Player& targetPlayer = *players[targetPlayerIdx];
-            cout << "👹 [" << monsters[i]->getName() << "] 瞄準了 [" << targetPlayer.getName() << "]!\n";
+            cout << "👹 [" << monsters[i]->getName() << "] 瞄準了 [" << players[targetPlayerIdx]->getName() << "]!\n";
 
             // 怪物發動攻擊，造成傷害
-            monsters[i]->attack(targetPlayer, monsters);
+            monsters[i]->attack(targetPlayerIdx, players, monsters);
         }
     }
 
@@ -201,6 +206,7 @@ namespace RPG_Colaborate
             // 在每輪結束時，呼叫狀態更新更新剩餘回合。
             // 只要在狀態管理內設定：當計數歸零時，將該狀態從 map 中 erase 移除即可。
             player->updateStatusEffects(); 
+            player->restoreMp(15);
         }
 
         // 🎯 【怪物的負面狀態在回合結束時減少一回合】 + 毒燒持續傷害結算

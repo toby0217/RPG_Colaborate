@@ -2,8 +2,10 @@
 #define BATTLEMANAGER_H
 
 #include <vector>
+#include <string>
 
 using std::vector;
+using std::string;
 
 namespace RPG_Colaborate
 {
@@ -16,8 +18,32 @@ namespace RPG_Colaborate
     // 戰鬥系統相關列舉
     enum TargetType { OWN, SINGLE, SPREAD, AOE, TEAM };
     enum HealTargetType { NONEH, OWNH, LOWERHP, TEAMH };
-    enum EffectType { NONEE, LOWERDEFENSE, TAUNT, BURN, COLD, FREEZE, POISON, WEAKEN,
+    enum EffectType { NONEE, LOWERDEFENSE, TAUNT, BURN, COLD, FREEZE, POISON, WEAKNESS,
                       PERSEVERANCE, CONTSHOOT, SPACEGOAT, HIDE, FREEACTION, STRENGTH, FEAST, GOLDBULLET, COUNTERATTACK };
+    
+    inline string getEffectName(EffectType type) 
+    {
+        switch (type) {
+            case LOWERDEFENSE:  return "LOWERDEFENSE";
+            case TAUNT:         return "TAUNT";
+            case BURN:          return "BURN";
+            case COLD:          return "COLD";
+            case FREEZE:        return "FREEZE";
+            case POISON:        return "POISON";
+            case WEAKNESS:      return "WEAKNESS";
+            case PERSEVERANCE:  return "PERSEVERANCE";
+            case CONTSHOOT:     return "CONTSHOOT";
+            case SPACEGOAT:     return "SPACEGOAT";
+            case HIDE:          return "HIDE";
+            case FREEACTION:    return "FREEACTION";
+            case STRENGTH:      return "STRENGTH";
+            case FEAST:         return "FEAST";
+            case GOLDBULLET:    return "GOLDBULLET";
+            case COUNTERATTACK: return "COUNTERATTACK";
+            default:            break;
+        }
+        return "";
+    }
 
     class BattleManager
     {

@@ -20,7 +20,7 @@ namespace RPG_Colaborate {
 
         // 覆寫以觸發被動補血
         void attack(int targetIndex, vector<Monster*>& monsters, vector<Player*>& players) override;
-        bool useSkill(int skillNumber, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters) override;
+        bool useSkill(int skillInput, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters) override;
         void triggerClassSpecial(Skill& theSkill, int targetIndex, vector<Monster*>& monsters, vector<Player*>& players) override;
     };
 }
