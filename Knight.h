@@ -30,8 +30,8 @@ namespace RPG_Colaborate {
         void setCriticalEffect(int newEffect);
 
         // Override takeDamage for flat damage reduction (Knight's passive)
-        void takeDamage(int damage);
-        bool useSkill(int skillNumber, int targetIndex, vector<Player*> players, vector<Monster*> monsters);
+        void takeDamage(int damage, vector<Monster*>& monsters) override;
+        bool useSkill(int skillNumber, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters) override;
     };
 }
 

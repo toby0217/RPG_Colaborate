@@ -59,7 +59,7 @@ namespace RPG_Colaborate
 
 
         //function
-        void attack(Player& player)const;
+        void attack(Player& player, vector<Monster*>& monsters)const;
         void takeDamage(int damage);
         bool isAlive()const;
         void showInfo()const;
@@ -68,7 +68,8 @@ namespace RPG_Colaborate
         string getDebuffs();
 
         void takeEffect(EffectType effectType, int effectTurns);
-        int getEffects(EffectType effectType);
+        int getEffectTurns(EffectType effectType);
+        void updateStatusEffects();
     };
 }
 

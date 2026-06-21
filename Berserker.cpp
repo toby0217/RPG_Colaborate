@@ -11,11 +11,11 @@ namespace RPG_Colaborate {
     {
         job = "Berserker";
         skillbox[0] = new Skill("Carnage Strike", SPREAD, NONEH, NONEE, 0,
-            DAMAGE, NONE, NONE, NONE, NONE, NONE, NONE, attackPower, 2.5, 0, 0, 0, 4); 
+            DAMAGE, NONE, NONE, NONE, NONE, NONE, NONE, attackPower, 1.8, 0, 0, 15, 3); 
         skillbox[1] = new Skill("Behemoth Counter", OWN, NONEH, COUNTERATTACK, 1,
             NONE, STATIC, NONE, NONE, NONE, NONE, NONE, 0, 0, 0, 40, 0, 4);
         skillbox[2] = new Skill("Feral Execution", AOE, NONEH, NONEE, 0,
-            DAMAGE, NONE, NONE, NONE, NONE, NONE, NONE, attackPower, 0, 0, 70, 0, 7);
+            NONE, NONE, NONE, NONE, NONE, NONE, SPECIAL, attackPower, 2.0, 0, 70, 0, 7);
     }
 
     Berserker::Berserker(string theName, int theMaxHp, int theMaxMp, int theAttackPower, int theDefense)
@@ -24,11 +24,11 @@ namespace RPG_Colaborate {
     {
         job = "Berserker";
         skillbox[0] = new Skill("Carnage Strike", SPREAD, NONEH, NONEE, 0,
-            DAMAGE, NONE, NONE, NONE, NONE, NONE, NONE, attackPower, 2.5, 0, 0, 0, 4); 
+            DAMAGE, NONE, NONE, NONE, NONE, NONE, NONE, attackPower, 1.8, 0, 0, 15, 4); 
         skillbox[1] = new Skill("Behemoth Counter", OWN, NONEH, COUNTERATTACK, 1,
             NONE, STATIC, NONE, NONE, NONE, NONE, NONE, 0, 0, 0, 40, 0, 4);
         skillbox[2] = new Skill("Feral Execution", AOE, NONEH, NONEE, 0,
-            DAMAGE, NONE, NONE, NONE, NONE, NONE, NONE, attackPower, 0, 0, 70, 0, 7);
+            NONE, NONE, NONE, NONE, NONE, NONE, SPECIAL, attackPower, 2.0, 0, 70, 0, 7);
     }
 
     Berserker::~Berserker() {
@@ -45,9 +45,9 @@ namespace RPG_Colaborate {
     void Berserker::setCriticalRate(int newRate) { criticalRate = newRate; }
     void Berserker::setCriticalEffect(int newEffect) { criticalEffect = newEffect; }
 
-    void Berserker::takeDamage(int damage) {
+    void Berserker::takeDamage(int damage, vector<Monster*>& monsters) {
         int oldHp = hp;
-        Player::takeDamage(damage);
+        Player::takeDamage(damage, monsters);
         int actualDamage = oldHp - hp;
 
         // 被動技能：根據實際承受傷害的比例回血
@@ -56,6 +56,10 @@ namespace RPG_Colaborate {
             cout << "🩸 [Berserker Passive] Bloodlust triggered! Recovering " << healAmount << " HP." << endl;
             hp += healAmount;
             if (hp > maxHp) hp = maxHp;
+
+            if (getEffectTurns(COUNTERATTACK) > 0) {
+                triggerCounterAttack(monsters);
+            }
         }
     }
 

@@ -71,9 +71,9 @@ namespace RPG_Colaborate
 
     // 2. Take Damage (受到傷害)(已調整)
     // 減少生命值，若沒有存活則彈出死亡播報
-    void Player::takeDamage(int damage) {
+    void Player::takeDamage(int damage, vector<Monster*>& monsters) {
         if(defense>0){
-            damage = round(damage * (1 - ( defense / (defense + 100) )));
+            damage = round(damage * (1.0 - ( 1.0 * defense / (defense + 100) )));
         }
         hp -= damage;
         if (hp < 0) {

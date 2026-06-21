@@ -24,7 +24,7 @@ namespace RPG_Colaborate {
         void setCriticalEffect(int newEffect);
 
         // 覆寫受傷：只保留被動回血邏輯
-        void takeDamage(int damage) override;
+        void takeDamage(int damage, vector<Monster*>& monsters) override;
 
         // 技能施放
         bool useSkill(int skillNumber, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters) override;
@@ -32,7 +32,7 @@ namespace RPG_Colaborate {
         // 供戰場檢測到「持有反擊狀態且受擊」時，向下呼叫的反擊函式
         void triggerCounterAttack(vector<Monster*> monsters);
         
-        void triggerClassSpecial(Skill& theSkill, int targetIndex, vector<Monster*>& monsters, vector<Player*>& players);
+        void triggerClassSpecial(Skill& theSkill, int targetIndex, vector<Monster*>& monsters, vector<Player*>& players) override;
     };
 }
 

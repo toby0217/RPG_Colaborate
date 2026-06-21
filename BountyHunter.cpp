@@ -84,14 +84,14 @@ namespace RPG_Colaborate {
         }
     }
 
-    void BountyHunter::takeDamage(int damage)
+    void BountyHunter::takeDamage(int damage, vector<Monster*>& monsters)
     {
         if (StatusEffectList[GOLDBULLET] >= 0) {
             cout << "✨ [Bounty Hunter]: \"Can't touch the merchandise! Solid gold armor, baby!\"" << endl;
-            Player::takeDamage(round(0.5 * damage));
+            Player::takeDamage(round(0.5 * damage), monsters);
         }
         else {
-            Player::takeDamage(damage);
+            Player::takeDamage(damage, monsters);
         }
     }
 

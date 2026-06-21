@@ -20,7 +20,7 @@ namespace RPG_Colaborate {
         skillbox[1] = new Skill("Soul Reaper", SINGLE, NONEH, WEAKEN, 2,
             DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, SPECIAL, attackPower, 1.2, 0, 30, 0, 4);
         // 技能3: 亡者晚宴 (賦予自身強化狀態)
-        skillbox[2] = new Skill("Macabre Feast", OWN, NONEH, FEAST, 2,
+        skillbox[2] = new Skill("Macabre Feast", OWN, NONEH, FEAST, 3,
             NONE, STATIC, NONE, NONE, NONE, NONE, SPECIAL, attackPower, 0, 0, 60, 0, 5);
     }
 
@@ -32,7 +32,7 @@ namespace RPG_Colaborate {
             NONE, NONE, NONE, NONE, NONE, NONE, SPECIAL, attackPower, 0, 0, 30, 0, 3);
         skillbox[1] = new Skill("靈魂割者", SINGLE, NONEH, WEAKEN, 2,
             DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, SPECIAL, attackPower, 1.2, 0, 30, 0, 4);
-        skillbox[2] = new Skill("亡者晚宴", OWN, NONEH, FEAST, 2,
+        skillbox[2] = new Skill("亡者晚宴", OWN, NONEH, FEAST, 3,
             NONE, STATIC, NONE, NONE, NONE, NONE, NONE, attackPower, 0, 0, 60, 0, 5);
     }
 

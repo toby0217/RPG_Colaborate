@@ -112,7 +112,7 @@ namespace RPG_Colaborate {
             // 假設怪物的狀態陣列允許直接存取 (與你 Ranger 中的設計一致)
             if (m != nullptr && m->isAlive()) {
                 if (&theSkill == skillbox[2]) {
-                    if (m->getEffects(BURN) >= 0 || m->getEffects(COLD) >= 0) {
+                    if (m->getEffectTurns(BURN) >= 0 || m->getEffectTurns(COLD) >= 0) {
                         cout << "💥 [Elemental Detonation] Thermal shock occurs on " << m->getName() << "!" << endl;
                         
                         // 造成額外傷害 (依你平衡需求可調整倍率，此處預設為攻擊力 1.5 倍)
@@ -125,7 +125,7 @@ namespace RPG_Colaborate {
                     }
                     return;
                 }
-                if (m->getEffects(BURN) >= 0 && m->getEffects(COLD) >= 0) {
+                if (m->getEffectTurns(BURN) >= 0 && m->getEffectTurns(COLD) >= 0) {
                     cout << "💥 [Elemental Detonation] Thermal shock occurs on " << m->getName() << "!" << endl;
                     
                     // 造成額外傷害 (依你平衡需求可調整倍率，此處預設為攻擊力 1.5 倍)

@@ -14,7 +14,7 @@ namespace RPG_Colaborate {
         int criticalRate;
         int criticalEffect;
         int multiShotTurns; // 連續射擊剩餘回合數 (Buff 狀態)
-
+        int spacegoatHp;
     public:
         Ranger();
         Ranger(string theName, int theMaxHp, int theMaxMp, int theAttackPower, int theDefense);
@@ -26,15 +26,11 @@ namespace RPG_Colaborate {
         void setCriticalRate(int newRate);
         void setCriticalEffect(int newEffect);
 
-        // 處理回合結束的狀態結算 (僅處理 Buff)
-        void updateBuffStatus();
-
-        // 覆寫普攻：處理對 Boss 增傷 50% 以及 連續射擊 (三連射與暴擊)
+        // overrides
         void attack(int targetIndex, vector<Monster*>& monsters, vector<Player*>& players) override;
-
-        // 覆寫使用技能：攔截並實作遊俠特有技能邏輯
+        void takeDamage(int damage, vector<Monster*>& monsters) override;
         bool useSkill(int skillNumber, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters) override;
-        void triggerClassSpecial(Skill& theSkill, int targetIndex, vector<Monster*>& monsters, vector<Player*>& players);
+        void triggerClassSpecial(Skill& theSkill, int targetIndex, vector<Monster*>& monsters, vector<Player*>& players) override;
     };
 }
 

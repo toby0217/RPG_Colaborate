@@ -10,28 +10,28 @@ using std::endl;
 
 namespace RPG_Colaborate {
     Ranger::Ranger()
-    : Player(), criticalRate(15), criticalEffect(200), multiShotTurns(0)
+    : Player(), criticalRate(15), criticalEffect(200), multiShotTurns(0), spacegoatHp(0)
     {
         job = "Ranger";
         skillbox[0] = new Skill("Cascading Shots", OWN, NONEH, CONTSHOOT, 2,
             NONE, STATIC, NONE, NONE, NONE, NONE, SPECIAL, attackPower, 0, 0, 30, 0, 4);
         skillbox[1] = new Skill("Mirage Artifice", OWN, NONEH, SPACEGOAT, 3,
-            NONE, STATIC, NONE, NONE, NONE, NONE, NONE, attackPower, 0, 0, 40, 0, 3);
+            NONE, STATIC, NONE, NONE, NONE, NONE, SPECIAL, attackPower, 0, 0, 40, 0, 3);
         skillbox[2] = new Skill("Endless Volley", SINGLE, NONEH, NONEE, 0,
             NONE, NONE, NONE, NONE, NONE, NONE, SPECIAL, attackPower, 0.6, 0, 70, 0, 6);
     }
 
     Ranger::Ranger(string theName, int theMaxHp, int theMaxMp, int theAttackPower, int theDefense)
     : Player(theName, theMaxHp, theMaxMp, theAttackPower, theDefense), 
-      criticalRate(15), criticalEffect(200), multiShotTurns(0)
+      criticalRate(15), criticalEffect(200), multiShotTurns(0), spacegoatHp(0)
     {
         job = "Ranger";
         skillbox[0] = new Skill("Cascading Shots", OWN, NONEH, CONTSHOOT, 2,
-            NONE, STATIC, NONE, NONE, NONE, NONE, NONE, attackPower, 0, 0, 30, 0, 4);
+            NONE, STATIC, NONE, NONE, NONE, NONE, SPECIAL, attackPower, 0, 0, 30, 0, 4);
         skillbox[1] = new Skill("Mirage Artifice", OWN, NONEH, SPACEGOAT, 3,
-            NONE, STATIC, NONE, NONE, NONE, NONE, NONE, attackPower, 0, 0, 40, 0, 3);
+            NONE, STATIC, NONE, NONE, NONE, NONE, SPECIAL, attackPower, 0, 0, 40, 0, 3);
         skillbox[2] = new Skill("Endless Volley", SINGLE, NONEH, NONEE, 0,
-            DAMAGE, NONE, NONE, NONE, NONE, NONE, NONE, attackPower, 0.6, 0, 70, 0, 6);
+            NONE, NONE, NONE, NONE, NONE, NONE, SPECIAL, attackPower, 0.6, 0, 70, 0, 6);
     }
 
     int Ranger::getCriticalRate() const { return criticalRate; }
@@ -74,6 +74,24 @@ namespace RPG_Colaborate {
         }
     }
 
+    void Ranger::takeDamage(int damage, vector<Monster*>& monsters)
+    {
+        if (getEffectTurns(SPACEGOAT) > 0) {
+            spacegoatHp -= damage;
+            cout << "Spacegoat takes " << damage << " points of damage! " 
+                << "(Current HP: " << spacegoatHp << ")" << endl;
+            // 生命為0，直接破壞假人，遊俠不會受到傷害
+            if (spacegoatHp <= 0) {
+                spacegoatHp = 0;
+                StatusEffectList[SPACEGOAT] = 0;
+                cout << "🪆 The Decoy Dummy completely crumbles into pieces! The Ranger is now exposed!" << endl;
+            }
+        }
+        else {
+            Player::takeDamage(damage, monsters);
+        }
+    }
+
     bool Ranger::useSkill(int skillNumber, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters) {
         if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) return false;
 
@@ -98,8 +116,11 @@ namespace RPG_Colaborate {
     void Ranger::triggerClassSpecial(Skill& theSkill, int targetIndex, vector<Monster*>& monsters, vector<Player*>& players)
     {
         if (&theSkill == skillbox[0]) { 
-            this->takeEffect(FREEACTION, 1);
-        } 
+            takeEffect(FREEACTION, 1);
+        }
+        else if (&theSkill == skillbox[1]) {
+            spacegoatHp = 0.5 * maxHp;
+        }
         else if (&theSkill == skillbox[2]) { 
             int currentCritRate = criticalRate + ((multiShotTurns > 0) ? 30 : 0); // 大招享受連射暴擊加成
             int bouncesLeft = 10;

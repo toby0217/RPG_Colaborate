@@ -49,13 +49,13 @@ namespace RPG_Colaborate
     void Monster::setDefense(int newDefense) { defense = newDefense; }
 
     //function
-    void Monster::attack(Player& player) const
+    void Monster::attack(Player& player, vector<Monster*>& monsters) const
     {
         //已調整:直接依照攻擊力造成傷害
         cout<<name<<" launch an attack!"<<endl;
         //這裡會輸出訊息
 
-        player.takeDamage(attackPower);
+        player.takeDamage(attackPower, monsters);
     }
 
     //這裡我對應player.cpp寫的，保持邏輯一致
