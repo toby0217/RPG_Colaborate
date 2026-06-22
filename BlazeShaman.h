@@ -15,7 +15,7 @@ namespace RPG_Colaborate {
         //完整建構子
         
         // 專屬技能：對全體玩家造成傷害並附加 BURN 狀態
-        void aoeBurnSkill(std::vector<Player*>& players);
+        void attack(int targetIndex, vector<Player*>& players, vector<Monster*>& monsters)override;
     };
 }
 

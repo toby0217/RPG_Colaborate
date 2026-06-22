@@ -14,7 +14,7 @@ namespace RPG_Colaborate {
         job = "Knight";
         skillbox[0] = new Skill("Shield Charge", SPREAD, NONEH, LOWERDEFENSE, 2,
             DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, NONE, attackPower, 1.2, 0, 30, 0, 3);
-        skillbox[1] = new Skill("Knight Aura", AOE, NONEH, TAUNT, 1,
+        skillbox[1] = new Skill("Knight Aura", OWN, NONEH, TAUNT, 1,
             NONE, STATIC, NONE, NONE, NONE, NONE, NONE, 0, 0, 0, 50, 0, 5);
         skillbox[2] = new Skill("The Indomitable Will", OWN, NONEH, PERSEVERANCE, 2,
             NONE, STATIC, NONE, NONE, NONE, NONE, NONE, 0, 0, 0, 90, 0, 8);
@@ -26,7 +26,7 @@ namespace RPG_Colaborate {
         job = "Knight";
         skillbox[0] = new Skill("Shield Charge", SPREAD, NONEH, LOWERDEFENSE, 2,
             DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, NONE, attackPower, 1.2, 0, 30, 0, 3);
-        skillbox[1] = new Skill("Knight Aura", AOE, NONEH, TAUNT, 1,
+        skillbox[1] = new Skill("Knight Aura", OWN, NONEH, TAUNT, 1,
             NONE, STATIC, NONE, NONE, NONE, NONE, NONE, 0, 0, 0, 50, 0, 5);
         skillbox[2] = new Skill("The Indomitable Will", OWN, NONEH, PERSEVERANCE, 2,
             NONE, STATIC, NONE, NONE, NONE, NONE, NONE, 0, 0, 0, 90, 0, 8);

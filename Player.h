@@ -49,6 +49,7 @@ namespace RPG_Colaborate
         int getMp() const;
         int getMaxMp() const;
         int getDefense() const;
+        int getOwnedGolds() const;
 
         // Setters
         void setName(string newName);
@@ -58,6 +59,7 @@ namespace RPG_Colaborate
         void setMp(int newMp);
         void setMaxMp(int newMaxMp);
         void setDefense(int newDefense);
+        void setOwnedGolds(int newOwnedGolds);
 
         virtual void addBountyGold(int gold);
         bool consumeMp(int amount);
@@ -66,7 +68,10 @@ namespace RPG_Colaborate
         // Core combat and interaction actions
         virtual void attack(int targetIndex, vector<Monster*>& monsters, vector<Player*>& players);
         virtual void takeDamage(int damage, vector<Monster*>& monsters);
+        void showInventory() const;
+        void obtainItem(const Item& baseItem);
         bool useItem(int itemCode, vector<Player*>& players, vector<Monster*>& monsters);
+        bool useOutOfCombatItem(int itemCode, vector<Player*>& players, vector<Monster*>& monsters);
         virtual bool useSkill(int skillInput, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters);
         bool isAlive();
 
@@ -77,8 +82,9 @@ namespace RPG_Colaborate
 
         void takeEffect(const EffectType& effectType, int effectTurns);
         int getEffectTurns(const EffectType& effectType) const;
-        void updateStatusEffects();
+        void updateStatusEffects(vector<Monster*>& monsters);
         void reduceCooldowns();
+        int getSkillCooldown(int skillIdx) const;
         
         void reviveWithHp(int reviveHp);
         virtual void triggerClassSpecial(Skill& theSkill, int targetIndex, vector<Monster*>& monsters, vector<Player*>& players);

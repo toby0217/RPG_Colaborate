@@ -160,16 +160,16 @@ namespace RPG_Colaborate
                     (monsters[leftTargetIndex] == nullptr || !monsters[leftTargetIndex]->isAlive())) {
                     leftTargetIndex--;
                 }
-                if (leftTargetIndex > 0) {
+                if (leftTargetIndex >= 0) {
                     monsters[leftTargetIndex]->takeEffect(effectType, effectTurns);
                 }
 
                 rightTargetIndex = targetIndex + 1;
-                while (leftTargetIndex < monsters.size() &&
+                while (rightTargetIndex < monsters.size() &&
                     (monsters[rightTargetIndex] == nullptr || !monsters[rightTargetIndex]->isAlive())) {
                     rightTargetIndex++;
                 }
-                if (rightTargetIndex > 0) {
+                if (rightTargetIndex < monsters.size()) {
                     monsters[rightTargetIndex]->takeEffect(effectType, effectTurns);
                 }
                 break;
@@ -191,7 +191,7 @@ namespace RPG_Colaborate
             int lowerHpIndex = 0;
             switch (healTargetType)
             {
-            case OWN:
+            case OWNH:
                 user.heal(0.01 * healPercent * user.getMaxHp());
                 break;
             case LOWERHP:
@@ -204,7 +204,7 @@ namespace RPG_Colaborate
                 }
                 players[lowerHpIndex]->heal(healPercent);
                 break;
-            case TEAM:
+            case TEAMH:
                 for (int i = 0; i < players.size(); i++) {
                     if (players[i]->isAlive()) {
                         players[i]->heal(0.01 * healPercent * user.getMaxHp());
@@ -219,6 +219,7 @@ namespace RPG_Colaborate
         // 技能有復活
         if (isRevive == REVIVE) {
             int reviveTarget = 0;
+            
             do
             {
                 reviveTarget = rand() % players.size();

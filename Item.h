@@ -38,7 +38,7 @@ namespace RPG_Colaborate
         int getQuantity() const;
         bool getUsableInBattle() const;
 
-        vector<Item> getStandardItems();
+        Item getStandardItems(int stdCode);
 
         // Setters
         void setName(const string& newName);

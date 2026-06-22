@@ -16,6 +16,11 @@
 #include "Necromancer.h"
 #include "BountyHunter.h"
 #include "Berserker.h"
+#include "VampireBat.h"
+#include "BlazeShaman.h"
+#include "SkeletonMasterSergeant.h"
+#include "FrostSlime.h"
+#include "TheDeceiver.h"
 #include "BattleManager.h" // 確保戰場管理員有被引入
 
 using std::vector;
@@ -32,7 +37,7 @@ int main()
     
     int role;
     cout << "========================================\n";
-    cout << "       歡迎來到 RPG 協同戰鬥測試系統       \n";
+    cout << "   Welcome to RPG Co-op Battle System   \n";
     cout << "========================================\n";
     
     // 戰鬥準備 1：選擇職業
@@ -112,11 +117,10 @@ int main()
         // 這樣 main() 就不需要越權去塞道具，維持封裝性！
     
     cout << "\n========================================\n";
-    cout << "⚔️ 冒險者小隊集結完畢，準備生成怪物資料庫...\n";
+    cout << "⚔️ Adventurer party assembled. Generating monster database...\n";
     cout << "========================================\n";
 
-    
-    cout << "🏹 戰場大門開啟，冒險者進入戰場！\n\n";
+    cout << "🏹 The battlefield gates open! Adventurers enter the fray!\n\n";
 
     // 戰鬥流程啟動：
     // 戰場管理員接手，內部會處理關卡(層數)推進、增益選擇、玩家與怪物的回合交替
@@ -129,6 +133,6 @@ int main()
     }
     players.clear();
 
-    cout << "\n測試結束，感謝遊玩！\n";
+    cout << "\nThank you for playing!\n";
     return 0;
 }

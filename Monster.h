@@ -24,7 +24,7 @@ namespace RPG_Colaborate
     
     class Monster
     {
-    private:
+    protected:
         string name;
         int hp;
         int maxHp;
@@ -32,6 +32,7 @@ namespace RPG_Colaborate
         int rewardGold;
         int evadeRate;
         int defense;
+        int turnCounter;
         map<EffectType, int> StatusEffectList;
         MonsterRank rank;
 
@@ -66,16 +67,14 @@ namespace RPG_Colaborate
         int calculateFinalDamage(int rawDamage);
         //function
         virtual void attack(int targetIndex, vector<Player*>& players, vector<Monster*>& monsters);
-        void takeDamage(int damage);
+        virtual void takeDamage(int damage);
         bool isAlive()const;
         void showInfo()const;
-
-        string getBuffs();
-        string getDebuffs();
+        virtual void entryAction(vector<Player*>& players, vector<Monster*>& monsters);
 
         void takeEffect(const EffectType& effectType, int effectTurns);
         int getEffectTurns(const EffectType& effectType) const;
-        void updateStatusEffects();
+        virtual void updateStatusEffects();
     };
 }
 

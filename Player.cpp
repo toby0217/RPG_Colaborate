@@ -49,6 +49,7 @@ namespace RPG_Colaborate
     int Player::getMp() const { return mp; }
     int Player::getMaxMp() const { return maxMp; }
     int Player::getDefense() const { return defense; }
+    int Player::getOwnedGolds() const { return ownedGolds; }
 
     //setters
     void Player::setName(string newName) { name = newName; }
@@ -62,6 +63,7 @@ namespace RPG_Colaborate
     void Player::setMp(int newMp) { mp = newMp; }
     void Player::setMaxMp(int newMaxMp) { maxMp = newMaxMp; }
     void Player::setDefense(int newDefense) { defense = newDefense; }
+    void Player::setOwnedGolds(int newOwnedGolds) { ownedGolds == newOwnedGolds; }
 
     void Player::addBountyGold(int gold) {
         ownedGolds += gold;
@@ -144,11 +146,89 @@ namespace RPG_Colaborate
         }
     }
 
+    void Player::showInventory() const {
+        cout << "\n--- [" << name << "'s Inventory] ---\n";
+        
+        if (items.empty()) {
+            cout << "  (Your backpack is completely empty...)\n";
+            return;
+        }
+
+        // 格式化輸出表頭
+        cout << "Slot | Item Name            | Qty  | Restriction\n";
+        cout << "-----+----------------------+------+----------------\n";
+
+        // 遍歷 map 裡的每一個格子
+        for (const auto& pair : items) {
+            int slot = pair.first;
+            const Item& item = pair.second;
+
+            // 使用 printf 或是 cout 進行對齊，這裡示範簡單的 printf 讓排版漂亮
+            // %-4d (左對齊4格), %-20s (左對齊20格), %-4d (左對齊4格)
+            printf("[%2d] | %-20s | %3d  | ", slot, item.getName().c_str(), item.getQuantity());
+            
+            if (item.getUsableInBattle()) {
+                cout << "[Battle Only]\n";
+            } else {
+                cout << "[Pre-Battle Only]\n";
+            }
+        }
+        cout << "------------------------------------------------\n";
+    }
+
+    void Player::obtainItem(const Item& baseItem) {
+        // 假設你的背包上限是 20 格 (可以自由修改這個上限)
+        const int MAX_INVENTORY_SLOTS = 20; 
+        
+        int firstEmptySlot = -1;
+        bool foundDuplicate = false;
+
+        // 🔍 第一步：遍歷所有可能的格子，尋找「有沒有重名」
+        for (int slot = 0; slot < MAX_INVENTORY_SLOTS; slot++) {
+            auto it = items.find(slot);
+            
+            if (it != items.end()) {
+                // 如果這格有道具，檢查名字是否相同
+                if (it->second.getName() == baseItem.getName()) {
+                    // 🎯 碰到了重名！立刻啟動 quantity++ 並結束
+                    int currentQty = it->second.getQuantity();
+                    it->second.setQuantity(currentQty + 1);
+                    
+                    cout << "🎒 [Inventory] [" << name << "] stacked [" << baseItem.getName() 
+                        << "] into Slot " << slot << ". (Total: " << it->second.getQuantity() << ")\n";
+                    foundDuplicate = true;
+                    break;
+                }
+            } else {
+                // 如果這格是空的，且我們之前還沒記錄過空位，就記下第一個找到的空位
+                if (firstEmptySlot == -1) {
+                    firstEmptySlot = slot;
+                }
+            }
+        }
+
+        // 🔍 第二步：如果沒重名，嘗試塞入第一個空位
+        if (!foundDuplicate) {
+            if (firstEmptySlot != -1) {
+                // 🎯 找到空白格子，塞入該道具，並確保數量為 1
+                items[firstEmptySlot] = baseItem;
+                items[firstEmptySlot].setQuantity(1);
+                
+                cout << "🎉 [Inventory] [" << name << "] placed [" << baseItem.getName() 
+                    << "] into a new Slot " << firstEmptySlot << ".\n";
+            } else {
+                // 背包滿了的防呆處理
+                cout << "❌ [Inventory] [" << name << "]'s inventory is FULL! Cannot pick up [" 
+                    << baseItem.getName() << "].\n";
+            }
+        }
+    }
+
     // 3. Use Item (戰鬥中使用道具，已修改為支援怪物全體並修復數量Bug)
     bool Player::useItem(int itemCode, vector<Player*>& players, vector<Monster*>& monsters) {
         auto it = items.find(itemCode);
         if (it == items.end()) {
-            cout << "背包裡沒有這個道具。\n";
+            cout << "This item is not in the inventory.\n";
             return false;
         }
 
@@ -160,12 +240,38 @@ namespace RPG_Colaborate
                 return false;
             }
             if (!theItem.getUsableInBattle()) {
-                cout << " [" << theItem.getName() << "] 只能在戰鬥結束後（脫戰）使用！\n";
+                cout << " [" << theItem.getName() << "] can only be used after battle (out of combat)!\n";
                 return false;
             }
         }
 
-        cout << name << " 在戰鬥中使用了道具: [" << theItem.getName() << "]!" << endl;
+        cout << name << " use item: [" << theItem.getName() << "]!" << endl;
+        theItem.use(*this, players, monsters); 
+        return true;
+    }
+
+    bool Player::useOutOfCombatItem(int itemCode, vector<Player*>& players, vector<Monster*>& monsters)
+    {
+        auto it = items.find(itemCode);
+        if (it == items.end()) {
+            cout << "This item is not in the inventory.\n";
+            return false;
+        }
+
+        Item& theItem = items[itemCode];
+
+        if (!theItem.isAvailable(true)) {
+            if (theItem.getQuantity() == 0) {
+                cout << "❌ [" << name << "] is out of stock!\n";
+                return false;
+            }
+            if (theItem.getUsableInBattle()) {
+                cout << " [" << theItem.getName() << "] can only be used during battle!\n";
+                return false;
+            }
+        }
+
+        cout << name << " use item: [" << theItem.getName() << "]!" << endl;
         theItem.use(*this, players, monsters); 
         return true;
     }
@@ -237,6 +343,7 @@ namespace RPG_Colaborate
     void Player::takeEffect(const EffectType& effectType, int effectTurns) {
         StatusEffectList[effectType] = effectTurns;
 
+        cout << "✨ "<< name <<" is now affected by status effect: " << getEffectName(effectType) << "!" << endl;
         // --- Special Status Activation Logic ---
         if (effectType == LAST_GASP && effectTurns > 0) {
             hp = 1; // Force current HP to 1 (or use setHp(1) if encapsulated)
@@ -258,7 +365,7 @@ namespace RPG_Colaborate
         return 0;
     }
 
-    void Player::updateStatusEffects() {
+    void Player::updateStatusEffects(vector<Monster*>& monsters) {
         // 使用迭代器安全遍歷 Map
         for (auto it = StatusEffectList.begin(); it != StatusEffectList.end() && it->first < FLOOR_STRENGTH; ) {
             // 防呆：如果原本就是 0 或是負數，直接剔除
@@ -284,6 +391,11 @@ namespace RPG_Colaborate
                     << "] converts pure willpower into vitality, restoring 30% of missing HP (+" << healAmount 
                     << " HP)! (Current HP: " << hp << "/" << maxHp << ")" << endl;
             }
+
+            if (it->first == BURN && it->second > 0) {
+                cout << "💥 " << name << " is burning! [BURN]" << endl;
+                takeDamage(static_cast<int>(maxHp * 0.05), monsters);
+            }
             
             // 狀態回合數減 1
             it->second--;
@@ -291,7 +403,7 @@ namespace RPG_Colaborate
             // 檢查減完後是否過期
             if (it->second == 0) {
                 // 假設你有寫一個 getEffectName() 轉換 Enum 到字串，方便輸出
-                cout << "✨ [" << name << "] 的 " << getEffectName(it->first) << " 效果結束了。\n";
+                cout << "✨ [" << name << "]'s " << getEffectName(it->first) << " effect has ended.\n";
                 it = StatusEffectList.erase(it); // 刪除並自動指向下一個元素
             } else {
                 ++it; // 沒過期，正常指針往下走
@@ -304,6 +416,15 @@ namespace RPG_Colaborate
         for (int i = 0; i < 3; i++) {
             skillbox[i]->reduceCooldown();
         }
+    }
+
+    // 1. 獲取三個技能的當前冷卻時間 (供 UI 渲染使用)
+    int Player::getSkillCooldown(int skillIdx) const {
+        // skillIdx 傳入 0, 1, 2 分別對應技能 1, 2, 3
+        if (skillIdx >= 0 && skillIdx < 3 && skillbox[skillIdx] != nullptr) {
+            return skillbox[skillIdx]->getCurrentCD();
+        }
+        return 0;
     }
 
     void Player::reviveWithHp(int reviveHp) {

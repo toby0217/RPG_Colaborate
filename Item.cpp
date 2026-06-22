@@ -12,14 +12,14 @@ using std::endl;
 namespace RPG_Colaborate
 {
     // 在 Item.cpp 中實作預設道具表
-    vector<Item> Item::getStandardItems() {
-        return {
+    Item Item::getStandardItems(int stdCode) {
+        vector<Item> stdItems = {
             // 建構子參數對應：
             // (name, type, effectValue(比例/傷害), effectType, effectTurns, quantity, usableInBattle)
             
             // --- 恢復類 (effectValue 代表 % 數) ---
-            {"Health Potion", "HEAL_HP", 50, NONEE, 0, 3, false},   // 回復 50% 最大 HP
-            {"Mana Potion", "HEAL_MP", 50, NONEE, 0, 3, true},   // 回復 50% 最大 MP
+            {"Health Potion", "HEAL_HP", 50, NONEE, 0, 1, false},   // 回復 50% 最大 HP
+            {"Mana Potion", "HEAL_MP", 50, NONEE, 0, 1, true},   // 回復 50% 最大 MP
             {"Revive Dew", "REVIVE", 100, NONEE, 0, 1, false},    // 復活並回復 100% HP
 
             // --- 脫戰強化類 (usableInBattle = false) ---
@@ -35,7 +35,10 @@ namespace RPG_Colaborate
             {"Scorching Sun", "ATTACK", 3500, NONEE, 0, 1, true},           // 純傷害，NONE 0回不播報
             {"Thor's Fury", "ATTACK", 15000, ELETRICSHOCK, 1, 1, true}   // 傷害 + 觸電 1回
         };
+
+        return stdItems[stdCode];
     }
+    
     // 建構子 (新增了 effectType 與 effectTurns)
     Item::Item() : name("Empty"), type("None"), effectValue(0), statusEffectType(NONEE),
     statusEffectTurns(0), quantity(0), usableInBattle(true) {}

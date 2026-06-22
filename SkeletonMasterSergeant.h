@@ -11,7 +11,9 @@ namespace RPG_Colaborate {
 
         SkeletonMasterSergeant(const string& name,int hp,int attackPower,int rewardGold,int evadeRate,int defense, MonsterRank rank);
         //完整建構子
+        void entryAction(vector<Player*>& players, vector<Monster*>& monsters)override;
         void summomSkeleton(std::vector<Monster*>& monsters);
+        void attack(int targetIndex, vector<Player*>& players, vector<Monster*>& monsters)override;
     };
 }
 

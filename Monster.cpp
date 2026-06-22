@@ -12,12 +12,12 @@ namespace RPG_Colaborate
 {
     //預設建構子，內容隨便填的，建議不用
     Monster::Monster(): 
-    name("monster"), maxHp(100), hp(100), attackPower(10), rewardGold(10), evadeRate(0), defense(0), rank(NORMAL) {}
+    name("monster"), maxHp(100), hp(100), attackPower(10), rewardGold(10), evadeRate(0), defense(0), rank(NORMAL), turnCounter(0) {}
 
     //建構子
     Monster::Monster(const string& theName,int theMaxHp,int theAttackPower,int theRewardGold,int theEvadeRate,int theDefense,MonsterRank theRank):
     name(theName), maxHp(theMaxHp), hp(theMaxHp), attackPower(theAttackPower), rewardGold(theRewardGold),
-    evadeRate(theEvadeRate), defense(theDefense), rank(theRank) {}
+    evadeRate(theEvadeRate), defense(theDefense), rank(theRank), turnCounter(0) {}
 
     //getters
     string Monster::getName() const { return name; }
@@ -129,6 +129,11 @@ namespace RPG_Colaborate
         }
     }
 
+    void Monster::entryAction(vector<Player*>& players, vector<Monster*>& monsters)
+    {
+        int dummy;
+    }
+
     // 3. 取得某個狀態剩餘的回合數
     int Monster::getEffectTurns(const EffectType& effectType) const
     {
@@ -142,19 +147,6 @@ namespace RPG_Colaborate
         
         // 找不到代表沒有這個 Buff/Debuff，回傳 0
         return 0; 
-    }
-
-    // 4. 取得所有 Buff（正面狀態）的字串
-    string Monster::getBuffs() {
-        // 從對話截圖看，逸明明天會用 enum 的數字來切分正負面狀態
-        // 為了讓今天的編譯能順利通過，我們先回傳乾淨的預設值交差
-        return ""; 
-    }
-
-    // 5. 取得所有 Debuff（負面狀態）的字串
-    string Monster::getDebuffs() {
-        // 同上，先回傳預設值，明天逸明的戰場邏輯寫好後他自己會來豐富這段
-        return ""; 
     }
 
     void Monster::updateStatusEffects() 

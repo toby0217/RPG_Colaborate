@@ -2,6 +2,12 @@
 #include "Monster.h"
 #include"Player.h"
 
+#include <iostream>
+#include <vector>
+using std::vector;
+using std::cout;
+using std::endl;
+
 namespace RPG_Colaborate{
     FrostSlime::FrostSlime():
     Monster("Frost Slime",100,10,10,0,0,MonsterRank::NORMAL){}
@@ -15,10 +21,10 @@ namespace RPG_Colaborate{
     //完整建構子
 
     void FrostSlime::attack(int targetIndex, vector<Player*>& players, vector<Monster*>& monsters){
+        cout << "❄️ Frost Slime launches an Ice Crystal attack!\n";
+        players[targetIndex]->takeDamage(getAttackPower(), monsters);
         if (rand() % 2 == 1) {
-            players[targetIndex]->takeEffect(FREEZE,1);//我用這個來施加效果
+            players[targetIndex]->takeEffect(FREEZE,1);
         }
-        
-        Monster::attack(targetIndex, players, monsters);
     }
 }
