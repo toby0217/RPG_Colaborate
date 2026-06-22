@@ -8,6 +8,9 @@ using std::vector;
 using std::cout;
 using std::endl;
 
+using std::cout;
+using std::endl;
+
 namespace RPG_Colaborate {
 
     Priest::Priest() : Player(), canRevive(true) {

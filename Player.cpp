@@ -275,6 +275,16 @@ namespace RPG_Colaborate
         theItem.use(*this, players, monsters); 
         return true;
     }
+    void Player::takeEffect(EffectType& effectType, int effectTurns) {
+        // 記錄狀態與對應的回合數
+        StatusEffectList[effectType] = effectTurns;
+        cout << "✨ " << name << " is now affected by status effect!" << endl;
+    }
+
+    // 實作空殼的特殊觸發，讓子類別去覆寫
+    void Player::triggerClassSpecial(EffectType& type) {
+        // Default player does nothing special
+    }
 
     // 4. Use Skill (使用技能)(已調整)
     // 實作技能使用 (加入耗血邏輯)

@@ -192,5 +192,6 @@ namespace RPG_Colaborate {
                 randomTarget->takeDamage(finalDamage);
             }
         }
+        return Player::useSkill(skillNumber, targetIndex, players, monsters);
     }
 }
