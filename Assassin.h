@@ -32,7 +32,9 @@ namespace RPG_Colaborate {
         void executeTurnActions(vector<Monster*>& monsterList);
 
         // 覆寫 useSkill 以實現大招重置
-        bool useSkill(int skillNumber, int targetIndex, vector<Player*> players, vector<Monster*> monsters) override;
+        void attack(int targetIndex, vector<Monster*>& monsters, vector<Player*>& players);
+        bool useSkill(int skillInput, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters) override;
+        void triggerClassSpecial(Skill& theSkill, int targetIndex, vector<Monster*>& monsters, vector<Player*>& players);
     };
 }
 

@@ -21,7 +21,7 @@ namespace RPG_Colaborate
     int theDamage, double theMultiplier, int theHealPercent, int theMpCost, int theHpCost, int theCD)
     : name(theName), targetType(TType), healTargetType(HType), effectType(EType), effectTurns(ETurns),
     isDamage(isDmg), isStatic(isSt), isBuff(isB), isDebuff(isDb), isHeal(isH), isRevive(isRv), isSpecial(isSp),
-    damage(theDamage), multiplier(theMultiplier), healPercent(theHealPercent), mpCost(theMpCost), hpCost(theHpCost), CD(theCD) {}
+    damage(theDamage), multiplier(theMultiplier), healPercent(theHealPercent), mpCost(theMpCost), hpCost(theHpCost), CD(theCD), currentCD(0) {}
 
     Skill::~Skill(){}
 
@@ -45,6 +45,7 @@ namespace RPG_Colaborate
     int Skill::getMpCost() const { return mpCost; }
     int Skill::getHpCost() const { return hpCost; }
     int Skill::getCD() const { return CD; }
+    int Skill::getCurrentCD() const { return currentCD; }
 
     // setters
     void Skill::setName(string newName) { name = newName; }
@@ -66,21 +67,24 @@ namespace RPG_Colaborate
     void Skill::setMpCost(int newMpCost) { mpCost = newMpCost; }
     void Skill::setHpCost(int newHpCost) { hpCost = newHpCost; }
     void Skill::setCD(int newCD) { CD = newCD; }
+    void Skill::setCurrentCD(int newCurrentCD) { currentCD = newCurrentCD; }
 
     //function
     // 使用技能(已調整)
     // 讓技能主導施法程序
     void Skill::use(Player& user, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters)
     {
-        // cout<<"Use \""<<name<<"\" cost "<<mpCost<<" MP"<<endl;
-        
-        cout << user.getName() << " casts a skill: [" << name << "]!" << endl;
+        currentCD = CD;
         damage = multiplier * user.getAttackPower();
-
         int leftTargetIndex, rightTargetIndex;
 
         // 技能有傷害:依照類型進行索敵
         if (isDamage == DAMAGE) {
+            if (user.getEffectTurns(LAST_GASP) > 0) {
+                damage *= 4;
+                user.takeEffect(LAST_GASP, 0); // ⚡ The moment the attack is unleashed, the status is immediately cleared!
+                cout << "🩸 The Last Gasp effect has been released with the attack, status removed.\n";
+            }
             switch (targetType)
             {
             case SINGLE:
@@ -93,12 +97,12 @@ namespace RPG_Colaborate
                     (monsters[leftTargetIndex] == nullptr || !monsters[leftTargetIndex]->isAlive())) {
                     leftTargetIndex--;
                 }
-                if (leftTargetIndex > 0) {
+                if (leftTargetIndex >= 0) {
                     monsters[leftTargetIndex]->takeDamage(0.5 * damage);
                 }
 
                 rightTargetIndex = targetIndex + 1;
-                while (leftTargetIndex < monsters.size() &&
+                while (rightTargetIndex < monsters.size() &&
                     (monsters[rightTargetIndex] == nullptr || !monsters[rightTargetIndex]->isAlive())) {
                     rightTargetIndex++;
                 }
@@ -147,32 +151,32 @@ namespace RPG_Colaborate
             switch (targetType)
             {
             case SINGLE:
-                monsters[targetIndex]->takeEffect(effectType);
+                monsters[targetIndex]->takeEffect(effectType, effectTurns);
                 break;
             case SPREAD:
-                monsters[targetIndex]->takeEffect(effectType);
+                monsters[targetIndex]->takeEffect(effectType, effectTurns);
                 leftTargetIndex = targetIndex - 1;
                 while (leftTargetIndex >= 0 &&
                     (monsters[leftTargetIndex] == nullptr || !monsters[leftTargetIndex]->isAlive())) {
                     leftTargetIndex--;
                 }
-                if (leftTargetIndex > 0) {
-                    monsters[leftTargetIndex]->takeEffect(effectType);
+                if (leftTargetIndex >= 0) {
+                    monsters[leftTargetIndex]->takeEffect(effectType, effectTurns);
                 }
 
                 rightTargetIndex = targetIndex + 1;
-                while (leftTargetIndex < monsters.size() &&
+                while (rightTargetIndex < monsters.size() &&
                     (monsters[rightTargetIndex] == nullptr || !monsters[rightTargetIndex]->isAlive())) {
                     rightTargetIndex++;
                 }
-                if (rightTargetIndex > 0) {
-                    monsters[rightTargetIndex]->takeEffect(effectType);
+                if (rightTargetIndex < monsters.size()) {
+                    monsters[rightTargetIndex]->takeEffect(effectType, effectTurns);
                 }
                 break;
             case AOE:
                 for (int i = 0; i < monsters.size(); i++) {
                     if (monsters[i] != nullptr && monsters[i]->isAlive()) {
-                        monsters[i]->takeEffect(effectType);
+                        monsters[i]->takeEffect(effectType, effectTurns);
                     }
                 }
                 break;
@@ -187,7 +191,7 @@ namespace RPG_Colaborate
             int lowerHpIndex = 0;
             switch (healTargetType)
             {
-            case OWN:
+            case OWNH:
                 user.heal(0.01 * healPercent * user.getMaxHp());
                 break;
             case LOWERHP:
@@ -200,7 +204,7 @@ namespace RPG_Colaborate
                 }
                 players[lowerHpIndex]->heal(healPercent);
                 break;
-            case TEAM:
+            case TEAMH:
                 for (int i = 0; i < players.size(); i++) {
                     if (players[i]->isAlive()) {
                         players[i]->heal(0.01 * healPercent * user.getMaxHp());
@@ -215,6 +219,7 @@ namespace RPG_Colaborate
         // 技能有復活
         if (isRevive == REVIVE) {
             int reviveTarget = 0;
+            
             do
             {
                 reviveTarget = rand() % players.size();
@@ -224,8 +229,12 @@ namespace RPG_Colaborate
         }
 
         if (isSpecial == SPECIAL) {
-            return;
+            user.triggerClassSpecial(*this, targetIndex, monsters, players);
         }
+    }
+
+    void Skill::reduceCooldown() {
+        if(currentCD > 0) currentCD--;
     }
 
     void Skill::showInfo() const

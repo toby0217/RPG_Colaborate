@@ -37,6 +37,7 @@ namespace RPG_Colaborate
         int mpCost;
         int hpCost;
         int CD;
+        int currentCD;
     public:
         // 建構子
         Skill();
@@ -66,6 +67,7 @@ namespace RPG_Colaborate
         int getMpCost() const;
         int getHpCost() const;
         int getCD() const;
+        int getCurrentCD() const;
 
         // Setters
         void setName(string newName);
@@ -87,9 +89,11 @@ namespace RPG_Colaborate
         void setMpCost(int newMpCost);
         void setHpCost(int newHpCost);
         void setCD(int newCD);
+        void setCurrentCD(int newCurrentCD);
 
         // 功能
         void use(Player& user, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters);
+        void reduceCooldown();
         void showInfo() const;
     };
 }

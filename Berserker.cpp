@@ -10,12 +10,12 @@ namespace RPG_Colaborate {
     : Player(), criticalRate(15), criticalEffect(200), passiveHealRatio(0.2)
     {
         job = "Berserker";
-        skillbox[0] = new Skill("嗜血狂擊", SPREAD, NONEH, NONEE, 0,
-            DAMAGE, NONE, NONE, NONE, NONE, NONE, NONE, attackPower, 2.5, 0, 0, 0, 4); 
-        skillbox[1] = new Skill("反擊巨獸", OWN, NONEH, COUNTERATTACK, 1,
+        skillbox[0] = new Skill("Carnage Strike", SPREAD, NONEH, NONEE, 0,
+            DAMAGE, NONE, NONE, NONE, NONE, NONE, NONE, attackPower, 1.8, 0, 0, 15, 3); 
+        skillbox[1] = new Skill("Behemoth Counter", OWN, NONEH, COUNTERATTACK, 1,
             NONE, STATIC, NONE, NONE, NONE, NONE, NONE, 0, 0, 0, 40, 0, 4);
-        skillbox[2] = new Skill("狂獸極刑", AOE, NONEH, NONEE, 0,
-            DAMAGE, NONE, NONE, NONE, NONE, NONE, NONE, attackPower, 0, 0, 70, 0, 7);
+        skillbox[2] = new Skill("Feral Execution", AOE, NONEH, NONEE, 0,
+            NONE, NONE, NONE, NONE, NONE, NONE, SPECIAL, attackPower, 2.0, 0, 70, 0, 7);
     }
 
     Berserker::Berserker(string theName, int theMaxHp, int theMaxMp, int theAttackPower, int theDefense)
@@ -23,12 +23,12 @@ namespace RPG_Colaborate {
       criticalRate(15), criticalEffect(200), passiveHealRatio(0.2)
     {
         job = "Berserker";
-        skillbox[0] = new Skill("嗜血狂擊", SPREAD, NONEH, NONEE, 0,
-            DAMAGE, NONE, NONE, NONE, NONE, NONE, NONE, attackPower, 2.5, 0, 0, 0, 4); 
-        skillbox[1] = new Skill("反擊巨獸", OWN, NONEH, COUNTERATTACK, 1,
+        skillbox[0] = new Skill("Carnage Strike", SPREAD, NONEH, NONEE, 0,
+            DAMAGE, NONE, NONE, NONE, NONE, NONE, NONE, attackPower, 1.8, 0, 0, 15, 4); 
+        skillbox[1] = new Skill("Behemoth Counter", OWN, NONEH, COUNTERATTACK, 1,
             NONE, STATIC, NONE, NONE, NONE, NONE, NONE, 0, 0, 0, 40, 0, 4);
-        skillbox[2] = new Skill("狂獸極刑", AOE, NONEH, NONEE, 0,
-            DAMAGE, NONE, NONE, NONE, NONE, NONE, NONE, attackPower, 0, 0, 70, 0, 7);
+        skillbox[2] = new Skill("Feral Execution", AOE, NONEH, NONEE, 0,
+            NONE, NONE, NONE, NONE, NONE, NONE, SPECIAL, attackPower, 2.0, 0, 70, 0, 7);
     }
 
     Berserker::~Berserker() {
@@ -45,9 +45,29 @@ namespace RPG_Colaborate {
     void Berserker::setCriticalRate(int newRate) { criticalRate = newRate; }
     void Berserker::setCriticalEffect(int newEffect) { criticalEffect = newEffect; }
 
-    void Berserker::takeDamage(int damage) {
+    
+    // ✨ 新增：實作狂戰士的專屬普攻（支援暴擊與災厄之手加成）
+    void Berserker::attack(int targetIndex, vector<Monster*>& monsters, vector<Player*>& players) {
+        int currentCritRate = calculateFinalCritRate(criticalRate);
+        int currentCritEffect = calculateFinalCritEffect(criticalEffect);
+
+        int finalDamage = getAttackPower();
+        if (getEffectTurns(LAST_GASP) > 0) {
+            finalDamage *= 4;
+            takeEffect(LAST_GASP, 0); // ⚡ The moment the attack is unleashed, the status is immediately cleared!
+            cout << "🩸 The Last Gasp effect has been released with the attack, status removed.\n";
+        }
+        if (rand() % 100 < currentCritRate) {
+            finalDamage = static_cast<int>(finalDamage * 0.01* currentCritEffect);
+            cout << " Critical Hit! ";
+        }
+        cout << name << " swings a massive weapon at " << monsters[targetIndex]->getName() << "!" << endl;
+        monsters[targetIndex]->takeDamage(finalDamage);
+    }
+    
+    void Berserker::takeDamage(int damage, vector<Monster*>& monsters) {
         int oldHp = hp;
-        Player::takeDamage(damage);
+        Player::takeDamage(damage, monsters);
         int actualDamage = oldHp - hp;
 
         // 被動技能：根據實際承受傷害的比例回血
@@ -56,13 +76,25 @@ namespace RPG_Colaborate {
             cout << "🩸 [Berserker Passive] Bloodlust triggered! Recovering " << healAmount << " HP." << endl;
             hp += healAmount;
             if (hp > maxHp) hp = maxHp;
+
+            if (getEffectTurns(COUNTERATTACK) > 0) {
+                triggerCounterAttack(monsters);
+            }
         }
     }
 
     void Berserker::triggerCounterAttack(vector<Monster*> monsters) {
-        cout << "🪓 [Counter Behemoth] " << name << " triggers a massive global counterattack!" << endl;
+        cout << "🪓 [Berserker]: \"You dare strike ME?! I'll feed your flesh to the crows!\"" << endl;
+        cout << "🪓 [Behemoth Counter] " << name << " triggers a massive global counterattack!" << endl;
         
-        int counterDamage = round(attackPower * 1.2);
+        int counterDamage = round(getAttackPower() * 1.5);
+        
+        if (getEffectTurns(LAST_GASP) > 0) {
+            counterDamage *= 4;
+            takeEffect(LAST_GASP, 0); // ⚡ The moment the attack is unleashed, the status is immediately cleared!
+            cout << "🩸 The Last Gasp effect has been released with the attack, status removed.\n";
+        }
+        
         for (auto enemy : monsters) {
             if (enemy != nullptr && enemy->isAlive()) {
                 cout << " Countering " << enemy->getName() << "!" << endl;
@@ -76,11 +108,21 @@ namespace RPG_Colaborate {
         if (hp > maxHp) hp = maxHp;
 
         // 反擊結算後直接拔除狀態，避免重複觸發
-        StatusEffectList[COUNTERATTACK] = -1;
+        takeEffect(COUNTERATTACK, 0);
     }
 
-    bool Berserker::useSkill(int skillNumber, int targetIndex, vector<Player*> players, vector<Monster*> monsters) {
-        if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) return false;
+    bool Berserker::useSkill(int skillInput, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters)
+    {
+        int skillNumber = skillInput - 1;
+        if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) {
+            cout << "The skill does not exist." << endl;
+            return false;
+        }
+
+        if (skillbox[skillNumber]->getCurrentCD() > 0) {
+            cout << "The skill is still in CD!" << endl;
+            return false;
+        }
 
         int mpRequired = skillbox[skillNumber]->getMpCost();
         if (mp < mpRequired) {
@@ -88,21 +130,20 @@ namespace RPG_Colaborate {
             return false;
         }
 
+        // 提前播報技能台詞
         if (skillNumber == 0) {
-            // 攔截並處理扣血機制
-            int hpCost = round(hp * 0.15);
-            if (hpCost < 1) hpCost = 1; // 至少扣 1
-            if (hp <= hpCost) {
-                cout << name << "'s HP is too low to cast [嗜血狂擊]!" << endl;
-                return false; // 血量不夠則終止施放
-            }
-            hp -= hpCost;
-            cout << "🩸 " << name << " consumes " << hpCost << " HP to empower the strike! (Remaining HP: " << hp << ")" << endl;
-        } 
-        else if (skillNumber == 1) {
-            cout << "🛡️ [Berserker]: \"Let them come! I'll crush them all!\"" << endl;
-        } 
-        else if (skillNumber == 2) {
+            cout << "🩸 [Berserker]: \"MORE BLOOD! Rip! Tear! DESTROY!!!\"" << endl;
+        } else if (skillNumber == 1) {
+            cout << "🪓 [Berserker]: \"You dare strike ME?! I'll feed your flesh to the crows!\"" << endl;
+        } else if (skillNumber == 2) {
+            cout << "👹 [Berserker]: \"GET OUT OF MY WAY! DIE! DIE! DIEEEEE!!!\"" << endl;
+        }
+
+        return Player::useSkill(skillInput, targetIndex, players, monsters);
+    }
+
+    void Berserker::triggerClassSpecial(Skill& theSkill, int targetIndex, vector<Monster*>& monsters, vector<Player*>& players) {
+        if (&theSkill == skillbox[2]) {
             // SPECIAL 邏輯：動態計算血量比例與傷害
             double hpRatio = (double)hp / maxHp;
             double damageMultiplier = 2.0;
@@ -114,18 +155,20 @@ namespace RPG_Colaborate {
                 damageMultiplier += (1.0 - hpRatio) * (1.5 / 0.8);
             }
 
-            int finalAoeDamage = round(attackPower * damageMultiplier);
-            cout << " Final damage multiplier: " << round(damageMultiplier * 100) << "%" << endl;
+            int finalAoeDamage = round(getAttackPower() * damageMultiplier);
+            if (getEffectTurns(LAST_GASP) > 0) {
+                finalAoeDamage *= 4;
+                takeEffect(LAST_GASP, 0); // ⚡ The moment the attack is unleashed, the status is immediately cleared!
+                cout << "🩸 The Last Gasp effect has been released with the attack, status removed.\n";
+            }
+            cout << "Final damage multiplier: " << round(damageMultiplier * 100) << "%" << endl;
 
             for (auto enemy : monsters) {
                 if (enemy != nullptr && enemy->isAlive()) {
-                    cout << " Executing " << enemy->getName() << "!" << endl;
+                    cout << "Executing " << enemy->getName() << "!" << endl;
                     enemy->takeDamage(finalAoeDamage);
                 }
             }
         }
-
-        // 剩下的統一交給父類處理 (如扣魔、進入 CD、賦予狀態)
-        return Player::useSkill(skillNumber, targetIndex, players, monsters);
     }
 }

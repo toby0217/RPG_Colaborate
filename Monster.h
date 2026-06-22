@@ -2,15 +2,29 @@
 #define MONSTER_H
 
 #include<string>
+#include<vector>
+#include <map>
+#include "BattleManager.h"
 using std::string;
+using std::vector;
+using std::map;
 
 namespace RPG_Colaborate
 {
     class Player;
+
+    enum EffectType; // 假設原本有的狀態類型
+
+    // 1. 新增等級/稀有度列舉
+    enum MonsterRank {
+        NORMAL,  // 小怪
+        ELITE,   // 精英
+        BOSS     // Boss
+    };
     
     class Monster
     {
-    private:
+    protected:
         string name;
         int hp;
         int maxHp;
@@ -18,12 +32,14 @@ namespace RPG_Colaborate
         int rewardGold;
         int evadeRate;
         int defense;
+        int turnCounter;
         map<EffectType, int> StatusEffectList;
+        MonsterRank rank;
 
     public:
         //建構子
         Monster();
-        Monster(const string& name,int hp,int attackPower,int rewardGold,int evadeRate,int defense);
+        Monster(const string& theName,int theMaxHp,int theAttackPower,int theRewardGold,int theEvadeRate,int theDefense, MonsterRank theRank);
 
 
         //getters
@@ -34,6 +50,7 @@ namespace RPG_Colaborate
         int getRewardGold()const;
         int getEvadeRate()const;
         int getDefense()const;
+        MonsterRank getRank()const;
 
 
         //setters
@@ -44,18 +61,20 @@ namespace RPG_Colaborate
         void setRewardGold(int newRewardGold);
         void setEvadeRate(int newEvadeRate);
         void setDefense(int newDefense);
+        void setRank(const MonsterRank& theRank);
 
 
+        int calculateFinalDamage(int rawDamage);
         //function
-        void attack(Player& player)const;
-        void takeDamage(int damage);
+        virtual void attack(int targetIndex, vector<Player*>& players, vector<Monster*>& monsters);
+        virtual void takeDamage(int damage);
         bool isAlive()const;
         void showInfo()const;
+        virtual void entryAction(vector<Player*>& players, vector<Monster*>& monsters);
 
-        string getBuffs();
-        string getDebuffs();
-
-        void takeEffect(EffectType effectType);
+        void takeEffect(const EffectType& effectType, int effectTurns);
+        int getEffectTurns(const EffectType& effectType) const;
+        virtual void updateStatusEffects();
     };
 }
 

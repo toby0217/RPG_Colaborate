@@ -26,9 +26,15 @@ namespace RPG_Colaborate
         int mp;
         int maxMp;
         int defense;
+        int ownedGolds;
         map<int, Item> items;
         Skill* skillbox[3];
         map<EffectType, int> StatusEffectList;
+
+        // ✨ 新增道具狀態變數
+        int tempCritRateBonus = 0;
+        int tempCritEffectBonus = 0;
+
     public:
         Player();
         Player(string theName, int theMaxHp, int theMaxMp, int theAttackPower, int theDefense);
@@ -39,10 +45,11 @@ namespace RPG_Colaborate
         string getJob() const;
         int getHp() const;
         int getMaxHp() const;
-        int getAttackPower() const;
+        virtual int getAttackPower() const;
         int getMp() const;
         int getMaxMp() const;
         int getDefense() const;
+        int getOwnedGolds() const;
 
         // Setters
         void setName(string newName);
@@ -52,26 +59,38 @@ namespace RPG_Colaborate
         void setMp(int newMp);
         void setMaxMp(int newMaxMp);
         void setDefense(int newDefense);
+        void setOwnedGolds(int newOwnedGolds);
 
+        virtual void addBountyGold(int gold);
         bool consumeMp(int amount);
+        int calculateFinalDamage(int rawDamage);
 
         // Core combat and interaction actions
-        virtual void attack(int targetIndex, vector<Monster*> monsters, vector<Player*> players);
-        virtual void takeDamage(int damage);
-        bool useItem(int itemCode);
-        virtual bool useSkill(int skillNumber, int targetIndex, vector<Player*> players, vector<Monster*> monsters);
+        virtual void attack(int targetIndex, vector<Monster*>& monsters, vector<Player*>& players);
+        virtual void takeDamage(int damage, vector<Monster*>& monsters);
+        void showInventory() const;
+        void obtainItem(const Item& baseItem);
+        bool useItem(int itemCode, vector<Player*>& players, vector<Monster*>& monsters);
+        bool useOutOfCombatItem(int itemCode, vector<Player*>& players, vector<Monster*>& monsters);
+        virtual bool useSkill(int skillInput, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters);
         bool isAlive();
 
         // 在 public: 底下找地方補上這兩行
         void heal(int amount);
-        //void restoreMp(int amount);
+        void restoreMp(int amount);
 
-        string getBuffs();
-        string getDebuffs();
 
-        void takeEffect(EffectType& effectType, int effectTurns);
+        void takeEffect(const EffectType& effectType, int effectTurns);
+        int getEffectTurns(const EffectType& effectType) const;
+        void updateStatusEffects(vector<Monster*>& monsters);
+        void reduceCooldowns();
+        int getSkillCooldown(int skillIdx) const;
+        
         void reviveWithHp(int reviveHp);
-        virtual void triggerClassSpecial(EffectType& type);
+        virtual void triggerClassSpecial(Skill& theSkill, int targetIndex, vector<Monster*>& monsters, vector<Player*>& players);
+
+        int calculateFinalCritRate(int baseRate);
+        int calculateFinalCritEffect(double baseEffect);
     };
 }
 

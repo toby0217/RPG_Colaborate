@@ -1,7 +1,9 @@
 #include "Assassin.h"
 #include <iostream>
 #include <vector>
+#include <cstdlib>
 #include <algorithm> // For std::sort
+using std::vector;
 using std::sort;
 using std::cout;
 using std::endl;
@@ -9,27 +11,27 @@ using std::endl;
 namespace RPG_Colaborate {
     // Constructors
     Assassin::Assassin()
-    : Player(), criticalRate(15), criticalEffect(200)
+    : Player(), criticalRate(15), criticalEffect(200), turnCounter(0)
     {
         job = "Assassin";
         skillbox[0] = new Skill("Cruel Kunai", SINGLE, NONEH, POISON, 2,
-            DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, NONE, attackPower, 1.2, 0, 30, 0, 3);
+            DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, SPECIAL, attackPower, 1.2, 0, 30, 0, 3);
         skillbox[1] = new Skill("Shadow Vanish", OWN, NONEH, HIDE, 1,
-            NONE, STATIC, NONE, NONE, NONE, NONE, NONE, attackPower, 1.6, 0, 40, 0, 3);
+            NONE, STATIC, NONE, NONE, NONE, NONE, SPECIAL, attackPower, 1.6, 0, 40, 0, 3);
         skillbox[2] = new Skill("Nightmare Reap", SINGLE, NONEH, NONEE, 0,
-            DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, NONE, attackPower, 2.5, 0, 60, 0, 6);
+            DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, SPECIAL, attackPower, 2.5, 0, 60, 0, 6);
     }
     Assassin::Assassin(string theName, int theMaxHp, int theMaxMp, int theAttackPower, int theDefense)
-    : Player(theName, theMaxHp, theMaxMp, theAttackPower, theDefense), 
-      criticalRate(15), criticalEffect(200)
+    : Player(theName, theMaxHp, theMaxMp, theAttackPower, theDefense),
+      criticalRate(15), criticalEffect(200), turnCounter(0)
     {
         job = "Assassin";
         skillbox[0] = new Skill("Cruel Kunai", SINGLE, NONEH, POISON, 2,
-            DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, NONE, attackPower, 1.2, 0, 30, 0, 3);
+            DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, SPECIAL, attackPower, 1.2, 0, 30, 0, 3);
         skillbox[1] = new Skill("Shadow Vanish", OWN, NONEH, HIDE, 1,
-            NONE, STATIC, NONE, NONE, NONE, NONE, NONE, attackPower, 1.6, 0, 40, 0, 3);
+            NONE, STATIC, NONE, NONE, NONE, NONE, SPECIAL, attackPower, 1.6, 0, 40, 0, 3);
         skillbox[2] = new Skill("Nightmare Reap", SINGLE, NONEH, NONEE, 0,
-            DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, NONE, attackPower, 2.5, 0, 60, 0, 6);
+            DAMAGE, NONE, NONE, DEBUFF, NONE, NONE, SPECIAL, attackPower, 2.5, 0, 60, 0, 6);
     }
 
     Assassin::~Assassin()
@@ -51,15 +53,43 @@ namespace RPG_Colaborate {
     void Assassin::setCriticalRate(int newRate) { criticalRate = newRate; }
     void Assassin::setCriticalEffect(int newEffect) { criticalEffect = newEffect;}
 
+
+    //  新增：實作刺客的專屬普攻（支援暴擊與災厄之手加成）
+    void Assassin::attack(int targetIndex, vector<Monster*>& monsters, vector<Player*>& players) {
+        int currentCritRate = calculateFinalCritRate(criticalRate);
+        int currentCritEffect = calculateFinalCritEffect(criticalEffect);
+        
+        int finalDamage = getAttackPower();
+        if (getEffectTurns(LAST_GASP) > 0) {
+            finalDamage *= 4;
+            takeEffect(LAST_GASP, 0); // ⚡ The moment the attack is unleashed, the status is immediately cleared!
+            cout << "🩸 The Last Gasp effect has been released with the attack, status removed.\n";
+        }
+        if (rand() % 100 < currentCritRate) {
+            finalDamage = static_cast<int>(finalDamage * 0.01* currentCritEffect);
+            cout << " Critical Hit! ";
+        }
+        cout << name << " performs a basic attack!" << endl;
+        monsters[targetIndex]->takeDamage(getAttackPower());
+        executeTurnActions(monsters);
+    }
+
     // 被動突襲
-    void Assassin::executeTurnActions(std::vector<Monster*>& monsterList) {
+    void Assassin::executeTurnActions(vector<Monster*>& monsters) {
         turnCounter++;
 
+        int damage = getAttackPower();
+
+        if (getEffectTurns(LAST_GASP) > 0) {
+            damage *= 4;
+            takeEffect(LAST_GASP, 0); // ⚡ The moment the attack is unleashed, the status is immediately cleared!
+            cout << "🩸 The Last Gasp effect has been released with the attack, status removed.\n";
+        }
         // Trigger assault every 2 rounds
         if (turnCounter % 2 == 0) {
             // Filter out already defeated monsters
-            std::vector<Monster*> aliveMonsters;
-            for (auto monster : monsterList) {
+            vector<Monster*> aliveMonsters;
+            for (auto monster : monsters) {
                 if (monster != nullptr && monster->getHp() > 0) {
                     aliveMonsters.push_back(monster);
                 }
@@ -68,28 +98,37 @@ namespace RPG_Colaborate {
             if (aliveMonsters.empty()) return;
 
             // Sort monsters by HP in ascending order (Lowest HP first)
-            std::sort(aliveMonsters.begin(), aliveMonsters.end(), [](Monster* a, Monster* b) {
+            sort(aliveMonsters.begin(), aliveMonsters.end(), [](Monster* a, Monster* b) {
                 return a->getHp() < b->getHp();
             });
 
-            std::cout << "⚡ [Assassin Passive] Round " << turnCounter << ": Launching a surprise assault!" << std::endl;
+            cout << "⚡ [Assassin Passive] Round " << turnCounter << ": Launching a surprise assault!" << endl;
 
             // Attack up to 2 monsters with the lowest HP
             int targetsAttacked = 0;
             for (auto target : aliveMonsters) {
                 if (targetsAttacked >= 2) break;
 
-                std::cout << "🗡️ Assailing " << target->getName() << " (Lowest HP target)!" << std::endl;
+                cout << "🗡️ Assailing " << target->getName() << " (Lowest HP target)!" << endl;
                 // Deal damage based on Assassin's attack power
-                target->takeDamage(attackPower); 
+                target->takeDamage(damage);
                 targetsAttacked++;
             }
         }
     }
 
-    bool Assassin::useSkill(int skillNumber, int targetIndex, vector<Player*> players, vector<Monster*> monsters)
+    bool Assassin::useSkill(int skillInput, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters)
     {
-        if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) return false;
+        int skillNumber = skillInput - 1;
+        if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) {
+            cout << "The skill does not exist." << endl;
+            return false;
+        }
+
+        if (skillbox[skillNumber]->getCurrentCD() > 0) {
+            cout << "The skill is still in CD!" << endl;
+            return false;
+        }
 
         int mpRequired = skillbox[skillNumber]->getMpCost();
         if (mp < mpRequired) {
@@ -97,33 +136,31 @@ namespace RPG_Colaborate {
             return false;
         }
 
-        // 播報台詞
-        if (skillNumber == 0) cout << "🗡️ [Assassin]: \"A swift end...\"" << endl;
-        else if (skillNumber == 1) cout << "🗡️ [Assassin]: \"Shadows veil me.\"" << endl;
-        else if (skillNumber == 2) cout << "🗡️ [Assassin]: \"Sleep now, into the eternal nightmare.\"" << endl;
-
-        // 若為大招，先記錄目標的狀態
-        Monster* targetMonster = nullptr;
-        if (skillNumber == 2 && targetIndex >= 0 && targetIndex < monsters.size()) {
-            targetMonster = monsters[targetIndex];
+        // 提前播報技能台詞
+        if (skillNumber == 0) {
+            cout << "🗡️ [Assassin]: \"A swift end...\"" << endl;
+        } else if (skillNumber == 1) {
+            cout << "🗡️ [Assassin]: \"Shadows veil me.\"" << endl;
+        } else if (skillNumber == 2) {
+            cout << "🗡️ [Assassin]: \"Sleep now, into the eternal nightmare.\"" << endl;
         }
 
-        // 呼叫父類執行技能
-        bool success = Player::useSkill(skillNumber, targetIndex, players, monsters);
+        return Player::useSkill(skillInput, targetIndex, players, monsters);
+    }
 
-        // 大招擊殺判定
-        if (success && skillNumber == 2 && targetMonster != nullptr) {
-            if (!targetMonster->isAlive()) {
-                cout << "💀 [Nightmare Reap] Target executed! Skill cooldown reset and MP refunded. You may act again!" << endl;
-                // 回復 MP
-                this->mp += skillbox[2]->getMpCost();
-                if (this->mp > this->maxMp) this->mp = this->maxMp;
-                skillbox[2]->setCD(0);
-                
-                // 重置 CD 邏輯 (需在 BattleManager 的技能冷卻系統配合，這裡先重置 Skill 本身狀態若有)
-                // this->triggerFreeAction(); // 示意：這部分通常由 BattleManager 偵測回傳值或狀態來決定
-            }
+    void Assassin::triggerClassSpecial(Skill& theSkill, int targetIndex, vector<Monster*>& monsters, vector<Player*>& players)
+    {
+        if (&theSkill == skillbox[2] && !monsters[targetIndex]->isAlive()) {
+            cout << "💀 [Nightmare Reap] Target executed! Skill cooldown reset and MP refunded. You may act again!" << endl;
+            // 回復 MP
+            mp += skillbox[2]->getMpCost();
+            if (mp > maxMp) mp = maxMp;
+            skillbox[2]->setCurrentCD(0);
+
+            takeEffect(FREEACTION, 1);
         }
-        return success;
+        if (getEffectTurns(FREEACTION) == 0) {
+            executeTurnActions(monsters);
+        }
     }
 }
