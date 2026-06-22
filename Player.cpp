@@ -12,13 +12,14 @@ namespace RPG_Colaborate
 {
     // Constructors
     Player::Player()
-    : name("Player"), job("Unknown"), maxHp(1000), hp(maxHp), maxMp(100), mp(maxMp), attackPower(100) {}
+    : name("Player"), job("Unknown"), maxHp(1000), hp(maxHp), maxMp(100), mp(maxMp),
+    attackPower(100), defense(0), ownedGolds(0) {}
     Player::Player(string theName, int theMaxHp, int theMaxMp, int theAttackPower, int theDefense) 
-    : name(theName), job("Unknown"), maxHp(theMaxHp), hp(theMaxHp), maxMp(theMaxMp), mp(theMaxMp), attackPower(theAttackPower), defense(theDefense) {}
+    : name(theName), job("Unknown"), maxHp(theMaxHp), hp(theMaxHp), maxMp(theMaxMp), mp(theMaxMp),
+    attackPower(theAttackPower), defense(theDefense), ownedGolds(0) {}
 
     // Destructor
     Player::~Player() {
-    
         for (int i = 0; i < 3; ++i) {
             if (skillbox[i] != nullptr) {
                 delete skillbox[i]; // 💡 確保每一招 new 出來的技能都有被釋放！
@@ -32,15 +33,18 @@ namespace RPG_Colaborate
     string Player::getJob() const { return job; }
     int Player::getHp() const { return hp; }
     int Player::getMaxHp() const { return maxHp; }
-    int Player::getAttackPower()
+    int Player::getAttackPower() const
     {
+        double strengthRate = 1;
         // 🎯 核心攔截：如果身上有牧師的增傷 Buff
         if (getEffectTurns(STRENGTH) > 0) {
-            // 回傳放大後的動態攻擊力
-            return static_cast<int>(attackPower * 1.3);
+            strengthRate += 0.3;
+        }
+        if (getEffectTurns(FLOOR_STRENGTH) > 0) {
+            strengthRate += 0.5;
         }
 
-        return attackPower;
+        return static_cast<int>(attackPower * strengthRate);
     }
     int Player::getMp() const { return mp; }
     int Player::getMaxMp() const { return maxMp; }
@@ -59,6 +63,10 @@ namespace RPG_Colaborate
     void Player::setMaxMp(int newMaxMp) { maxMp = newMaxMp; }
     void Player::setDefense(int newDefense) { defense = newDefense; }
 
+    void Player::addBountyGold(int gold) {
+        ownedGolds += gold;
+    }
+
     bool Player::consumeMp(int cost) {
         if (mp >= cost) {
             mp -= cost;
@@ -71,13 +79,41 @@ namespace RPG_Colaborate
         }
     }
 
+    int Player::calculateFinalCritRate(int baseRate)
+    {
+        int finalRate = baseRate;
+        if (getEffectTurns(FLOOR_CALAMITY) > 0) {
+            finalRate += 50;
+        }
+        if (getEffectTurns(CONTSHOOT) > 0) {
+            finalRate += 30;
+        }
+        return finalRate;
+    }
+
+    int Player::calculateFinalCritEffect(double baseEffect)
+    {
+        int finalEffect = baseEffect;
+        if (getEffectTurns(FLOOR_CALAMITY) > 0) {
+            finalEffect += 200;
+        }
+        return finalEffect;
+    }
+
     // 1. Basic Attack(已調整)
     // 發動普攻，然後怪物受到傷害
     void Player::attack(int targetIndex, vector<Monster*>& monsters, vector<Player*>& players) {
+        int damage = getAttackPower();
+        if (getEffectTurns(LAST_GASP) > 0) {
+            damage *= 4;
+            takeEffect(LAST_GASP, 0); // ⚡ The moment the attack is unleashed, the status is immediately cleared!
+            cout << "🩸 The Last Gasp effect has been released with the attack, status removed.\n";
+        }
         cout << name << " performs a basic attack!" << endl;
-        monsters[targetIndex]->takeDamage(getAttackPower());
+        monsters[targetIndex]->takeDamage(damage);
     }
 
+    // 根據防禦計算受傷
     int Player::calculateFinalDamage(int rawDamage)
     {
         if(defense>0){
@@ -91,6 +127,11 @@ namespace RPG_Colaborate
     // 減少生命值，若沒有存活則彈出死亡播報
     void Player::takeDamage(int damage, vector<Monster*>& monsters) {
         damage = calculateFinalDamage(damage);
+        // 🛡️ 金鐘罩優先級最高，直接攔截
+        if (getEffectTurns(GOLDEN_BELL) > 0) {
+            cout << "🛡️ Golden Bell activated! Immune to all damage!\n";
+            damage = 0;
+        }
         hp -= damage;
         if (hp < 0) {
             hp = 0; // Prevent HP from dropping below zero
@@ -103,41 +144,31 @@ namespace RPG_Colaborate
         }
     }
 
-    // 3. Use Item (使用道具)(已調整)
-    bool Player::useItem(int itemCode) {
-        // 檢查道具代碼是否合法
+    // 3. Use Item (戰鬥中使用道具，已修改為支援怪物全體並修復數量Bug)
+    bool Player::useItem(int itemCode, vector<Player*>& players, vector<Monster*>& monsters) {
         auto it = items.find(itemCode);
         if (it == items.end()) {
-            cout << "No this item." << endl;
+            cout << "背包裡沒有這個道具。\n";
             return false;
         }
 
-        Item theItem = items[itemCode];
-        // 檢查道具是否能使用，以及數量是否>0
-        if (!theItem.isAvailable()) {
-            cout << "Failed to use this item." << endl;
-            if (theItem.getQuantity() <= 0) {
-                cout << "Not enough items in package." << endl;
+        Item& theItem = items[itemCode];
+
+        if (!theItem.isAvailable(true)) {
+            if (theItem.getQuantity() == 0) {
+                cout << "❌ [" << name << "] is out of stock!\n";
+                return false;
             }
-            return false;
+            if (!theItem.getUsableInBattle()) {
+                cout << " [" << theItem.getName() << "] 只能在戰鬥結束後（脫戰）使用！\n";
+                return false;
+            }
         }
 
-        // 使用道具
-        cout << name << " uses an item: [" << theItem.getName() << "]!" << endl;
-        theItem.use(*this);
+        cout << name << " 在戰鬥中使用了道具: [" << theItem.getName() << "]!" << endl;
+        theItem.use(*this, players, monsters); 
         return true;
     }
-
-    void Player::takeEffect(const EffectType& effectType, int effectTurns) {
-        // 記錄狀態與對應的回合數
-        StatusEffectList[effectType] = effectTurns;
-        if (effectTurns > 0) {
-            cout << "✨ " << name << " is now affected by status effect: " << getEffectName(effectType) << "!" << endl;
-        }
-
-    }
-
-    
 
     // 4. Use Skill (使用技能)(已調整)
     // 實作技能使用 (加入耗血邏輯)
@@ -149,14 +180,14 @@ namespace RPG_Colaborate
             return false;
         }
         
-        int mpRequired = skillbox[skillNumber]->getMpCost();
-        if (!consumeMp(mpRequired)) {
-            cout << name << " does not have enough MP!" << endl;
+        if (skillbox[skillNumber]->getCurrentCD() > 0) {
+            cout << "The skill is still in CD!" << endl;
             return false;
         }
 
-        if (skillbox[skillNumber]->getCurrentCD() > 0) {
-            cout << "The skill is still in CD!" << endl;
+        int mpRequired = skillbox[skillNumber]->getMpCost();
+        if (!consumeMp(mpRequired)) {
+            cout << name << " does not have enough MP!" << endl;
             return false;
         }
 
@@ -203,6 +234,16 @@ namespace RPG_Colaborate
         cout << "💠 " << name << " restored " << amount << " MP points. Current MP: " << mp << "/" << maxMp << endl;
     }
 
+    void Player::takeEffect(const EffectType& effectType, int effectTurns) {
+        StatusEffectList[effectType] = effectTurns;
+
+        // --- Special Status Activation Logic ---
+        if (effectType == LAST_GASP && effectTurns > 0) {
+            hp = 1; // Force current HP to 1 (or use setHp(1) if encapsulated)
+            cout << "🩸 The Last Gasp unleashed! " << name << "'s HP drops to 1, awakening forbidden potential!\n";
+        }
+    }
+
     int Player::getEffectTurns(const EffectType& effectType) const
     {
         // 使用 find 尋找關鍵字
@@ -219,7 +260,7 @@ namespace RPG_Colaborate
 
     void Player::updateStatusEffects() {
         // 使用迭代器安全遍歷 Map
-        for (auto it = StatusEffectList.begin(); it != StatusEffectList.end(); ) {
+        for (auto it = StatusEffectList.begin(); it != StatusEffectList.end() && it->first < FLOOR_STRENGTH; ) {
             // 防呆：如果原本就是 0 或是負數，直接剔除
             if (it->second <= 0) {
                 it = StatusEffectList.erase(it);
@@ -258,6 +299,13 @@ namespace RPG_Colaborate
         }
     }
 
+    void Player::reduceCooldowns()
+    {
+        for (int i = 0; i < 3; i++) {
+            skillbox[i]->reduceCooldown();
+        }
+    }
+
     void Player::reviveWithHp(int reviveHp) {
         // 安全檢查：通常只有死掉的人可以被復活
         if (this->hp <= 0) {
@@ -268,9 +316,9 @@ namespace RPG_Colaborate
                 this->hp = this->maxHp;
             }
             
-            std::cout << name << " come back from Underworld! Revived and healed " << this->hp << " HP points" << std::endl;
+            cout << name << " come back from Underworld! Revived and healed " << this->hp << " HP points" << endl;
         } else {
-            std::cout << name << " still alive, no need to revive!" << std::endl;
+            cout << name << " still alive, no need to revive!" << endl;
         }
     }
 

@@ -45,6 +45,26 @@ namespace RPG_Colaborate {
     void Berserker::setCriticalRate(int newRate) { criticalRate = newRate; }
     void Berserker::setCriticalEffect(int newEffect) { criticalEffect = newEffect; }
 
+    
+    // ✨ 新增：實作狂戰士的專屬普攻（支援暴擊與災厄之手加成）
+    void Berserker::attack(int targetIndex, vector<Monster*>& monsters, vector<Player*>& players) {
+        int currentCritRate = calculateFinalCritRate(criticalRate);
+        int currentCritEffect = calculateFinalCritEffect(criticalEffect);
+
+        int finalDamage = getAttackPower();
+        if (getEffectTurns(LAST_GASP) > 0) {
+            finalDamage *= 4;
+            takeEffect(LAST_GASP, 0); // ⚡ The moment the attack is unleashed, the status is immediately cleared!
+            cout << "🩸 The Last Gasp effect has been released with the attack, status removed.\n";
+        }
+        if (rand() % 100 < currentCritRate) {
+            finalDamage = static_cast<int>(finalDamage * 0.01* currentCritEffect);
+            cout << " Critical Hit! ";
+        }
+        cout << name << " swings a massive weapon at " << monsters[targetIndex]->getName() << "!" << endl;
+        monsters[targetIndex]->takeDamage(finalDamage);
+    }
+    
     void Berserker::takeDamage(int damage, vector<Monster*>& monsters) {
         int oldHp = hp;
         Player::takeDamage(damage, monsters);
@@ -67,7 +87,14 @@ namespace RPG_Colaborate {
         cout << "🪓 [Berserker]: \"You dare strike ME?! I'll feed your flesh to the crows!\"" << endl;
         cout << "🪓 [Behemoth Counter] " << name << " triggers a massive global counterattack!" << endl;
         
-        int counterDamage = round(getAttackPower() * 1.2);
+        int counterDamage = round(getAttackPower() * 1.5);
+        
+        if (getEffectTurns(LAST_GASP) > 0) {
+            counterDamage *= 4;
+            takeEffect(LAST_GASP, 0); // ⚡ The moment the attack is unleashed, the status is immediately cleared!
+            cout << "🩸 The Last Gasp effect has been released with the attack, status removed.\n";
+        }
+        
         for (auto enemy : monsters) {
             if (enemy != nullptr && enemy->isAlive()) {
                 cout << " Countering " << enemy->getName() << "!" << endl;
@@ -81,7 +108,7 @@ namespace RPG_Colaborate {
         if (hp > maxHp) hp = maxHp;
 
         // 反擊結算後直接拔除狀態，避免重複觸發
-        StatusEffectList[COUNTERATTACK] = 0;
+        takeEffect(COUNTERATTACK, 0);
     }
 
     bool Berserker::useSkill(int skillInput, int targetIndex, vector<Player*>& players, vector<Monster*>& monsters)
@@ -89,6 +116,11 @@ namespace RPG_Colaborate {
         int skillNumber = skillInput - 1;
         if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) {
             cout << "The skill does not exist." << endl;
+            return false;
+        }
+
+        if (skillbox[skillNumber]->getCurrentCD() > 0) {
+            cout << "The skill is still in CD!" << endl;
             return false;
         }
 
@@ -124,6 +156,11 @@ namespace RPG_Colaborate {
             }
 
             int finalAoeDamage = round(getAttackPower() * damageMultiplier);
+            if (getEffectTurns(LAST_GASP) > 0) {
+                finalAoeDamage *= 4;
+                takeEffect(LAST_GASP, 0); // ⚡ The moment the attack is unleashed, the status is immediately cleared!
+                cout << "🩸 The Last Gasp effect has been released with the attack, status removed.\n";
+            }
             cout << "Final damage multiplier: " << round(damageMultiplier * 100) << "%" << endl;
 
             for (auto enemy : monsters) {

@@ -44,17 +44,23 @@ namespace RPG_Colaborate {
         bool isElite = (monsters[targetIndex]->getRank() == ELITE || monsters[targetIndex]->getRank() == BOSS);
         double multiplier = isElite ? 1.5 : 1.0;
 
-        int currentCritRate = criticalRate + ((StatusEffectList[CONTSHOOT] >= 0) ? 30 : 0);
-
+        int currentCritRate = calculateFinalCritRate(criticalRate);
+        int currentCritEffect = calculateFinalCritEffect(criticalEffect);
+        
         if (isElite) {
             cout << " [Ranger Passive] Locked onto Boss! Damage increased by 50%!" << endl;
         }
 
         if (StatusEffectList[CONTSHOOT] >= 0) {
+            int finalDamage = round(0.6 * getAttackPower() * multiplier);
+            if (getEffectTurns(LAST_GASP) > 0) {
+                    finalDamage *= 4;
+                    takeEffect(LAST_GASP, 0); // ⚡ The moment the attack is unleashed, the status is immediately cleared!
+                    cout << "🩸 The Last Gasp effect has been released with the attack, status removed.\n";
+            }
             for (int i = 1; i <= 3; i++) {
-                int finalDamage = round(0.6 * getAttackPower() * multiplier);
                 if (rand() % 100 < currentCritRate) {
-                    finalDamage = finalDamage * criticalEffect / 100;
+                    finalDamage = static_cast<int>(finalDamage * 0.01* currentCritEffect);
                     cout << " Critical Hit! ";
                 }
                 cout << name << " shoots an arrow at " << monsters[targetIndex]->getName() << "!" << endl;
@@ -65,8 +71,13 @@ namespace RPG_Colaborate {
         }
         else {
             int finalDamage = getAttackPower();
+            if (getEffectTurns(LAST_GASP) > 0) {
+                finalDamage *= 4;
+                takeEffect(LAST_GASP, 0); // ⚡ The moment the attack is unleashed, the status is immediately cleared!
+                cout << "🩸 The Last Gasp effect has been released with the attack, status removed.\n";
+            }
             if (rand() % 100 < currentCritRate) {
-                finalDamage = finalDamage * criticalEffect / 100;
+                finalDamage = static_cast<int>(finalDamage * 0.01* currentCritEffect);
                 cout << " Critical Hit! ";
             }
             cout << name << " shoots an arrow at " << monsters[targetIndex]->getName() << "!" << endl;
@@ -100,6 +111,11 @@ namespace RPG_Colaborate {
             return false;
         }
 
+        if (skillbox[skillNumber]->getCurrentCD() > 0) {
+            cout << "The skill is still in CD!" << endl;
+            return false;
+        }
+
         int mpRequired = skillbox[skillNumber]->getMpCost();
         if (mp < mpRequired) {
             cout << name << " does not have enough MP!" << endl;
@@ -127,18 +143,26 @@ namespace RPG_Colaborate {
             spacegoatHp = 0.5 * maxHp;
         }
         else if (&theSkill == skillbox[2]) { 
-            int currentCritRate = criticalRate + ((multiShotTurns > 0) ? 30 : 0); // 大招享受連射暴擊加成
+             // ✨ 大招同樣支援災厄之手加成
+            int currentCritRate = calculateFinalCritRate(criticalRate);
+            int currentCritEffect = calculateFinalCritEffect(criticalEffect);
             int bouncesLeft = 10;
 
+            int arrowDamage = static_cast<int>(0.6 * getAttackPower());
+            if (getEffectTurns(LAST_GASP) > 0) {
+                arrowDamage *= 4;
+                takeEffect(LAST_GASP, 0); // ⚡ The moment the attack is unleashed, the status is immediately cleared!
+                cout << "🩸 The Last Gasp effect has been released with the attack, status removed.\n";
+            }
             // 第一發優先命中主目標
             if (monsters[targetIndex] != nullptr && monsters[targetIndex]->isAlive()) {
-                int arrowDamage = getAttackPower();
+                int finalDamage = arrowDamage;
                 if (rand() % 100 < currentCritRate) {
-                    arrowDamage = arrowDamage * criticalEffect / 100;
+                    finalDamage = static_cast<int>(finalDamage * 0.01* currentCritEffect);
                     cout << " Critical Hit! ";
                 }
                 cout << "Arrow hits " << monsters[targetIndex]->getName() << "!" << endl;
-                monsters[targetIndex]->takeDamage(arrowDamage);
+                monsters[targetIndex]->takeDamage(finalDamage);
                 bouncesLeft--;
             }
 
@@ -159,13 +183,13 @@ namespace RPG_Colaborate {
                 }
 
                 Monster* randomTarget = aliveMonsters[rand() % aliveMonsters.size()];
-                int arrowDamage = getAttackPower();
+                int finalDamage = arrowDamage;
                 if (rand() % 100 < currentCritRate) {
-                    arrowDamage = arrowDamage * criticalEffect / 100;
+                    finalDamage = static_cast<int>(finalDamage * 0.01* currentCritEffect);
                     cout << " Critical Hit! ";
                 }
                 cout << "Arrow hits " << randomTarget->getName() << "!" << endl;
-                randomTarget->takeDamage(arrowDamage);
+                randomTarget->takeDamage(finalDamage);
             }
         }
     }

@@ -9,6 +9,10 @@
 using std::vector;
 
 namespace RPG_Colaborate {
+    class BattleManager;
+    class Skill;
+    class Monster;
+    
     class Ranger : public Player {
     private:
         int criticalRate;

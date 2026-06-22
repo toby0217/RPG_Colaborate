@@ -11,6 +11,8 @@ namespace RPG_Colaborate {
     class BlazeShaman : public Monster {
     public:
         BlazeShaman();
+        BlazeShaman(const string& name,int hp,int attackPower,int rewardGold,int evadeRate,int defense,MonsterRank rank);
+        //完整建構子
         
         // 專屬技能：對全體玩家造成傷害並附加 BURN 狀態
         void aoeBurnSkill(std::vector<Player*>& players);

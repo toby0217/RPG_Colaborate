@@ -80,6 +80,11 @@ namespace RPG_Colaborate {
             return false;
         }
 
+        if (skillbox[skillNumber]->getCurrentCD() > 0) {
+            cout << "The skill is still in CD!" << endl;
+            return false;
+        }
+
         int mpRequired = skillbox[skillNumber]->getMpCost();
         if (mp < mpRequired) {
             cout << name << " does not have enough MP!" << endl;

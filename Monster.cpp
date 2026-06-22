@@ -15,7 +15,7 @@ namespace RPG_Colaborate
     name("monster"), maxHp(100), hp(100), attackPower(10), rewardGold(10), evadeRate(0), defense(0), rank(NORMAL) {}
 
     //建構子
-    Monster::Monster(const string& theName,int theMaxHp,int theAttackPower,int theRewardGold,int theEvadeRate,int theDefense, MonsterRank theRank):
+    Monster::Monster(const string& theName,int theMaxHp,int theAttackPower,int theRewardGold,int theEvadeRate,int theDefense,MonsterRank theRank):
     name(theName), maxHp(theMaxHp), hp(theMaxHp), attackPower(theAttackPower), rewardGold(theRewardGold),
     evadeRate(theEvadeRate), defense(theDefense), rank(theRank) {}
 
@@ -93,6 +93,10 @@ namespace RPG_Colaborate
             }
         }
         damage = calculateFinalDamage(damage);
+        if (getEffectTurns(ELETRICSHOCK) > 0) {
+            cout << "⚡ [Electric Shock] The conductive current erupts! Damage increased by 50%!\n";
+            damage = static_cast<int>(damage * 1.5);
+        }
         hp -= damage;
         if (hp < 0) {
             hp = 0; // Prevent HP from dropping below zero
@@ -118,9 +122,11 @@ namespace RPG_Colaborate
 
         // 2. 承受狀態異常（例如：被施加 BURN 3 回合）
     void Monster::takeEffect(const EffectType& effectType, int effectTurns) {
-        // 假設你在 Monster.h 裡的 map 變數叫做 effects (即 map<EffectType, int> effects;)
-        // 這裡直接將該狀態的回合數更新或寫入
-        StatusEffectList[effectType] = effectTurns; 
+        // 記錄狀態與對應的回合數
+        StatusEffectList[effectType] = effectTurns;
+        if (effectTurns > 0) {
+            cout << "✨ " << name << " is now affected by status effect: " << getEffectName(effectType) << "!" << endl;
+        }
     }
 
     // 3. 取得某個狀態剩餘的回合數
@@ -167,7 +173,7 @@ namespace RPG_Colaborate
                 if (it->first == POISON) {
                     int poisonDamage = 0;
                     int poisonDamageRate = 20; // 基礎中毒傷害
-                    if (rank == ELITE && rank == BOSS) {
+                    if (rank == ELITE || rank == BOSS) {
                         poisonDamage = round(0.05 * (maxHp-hp));
                     }
                     else {
@@ -176,6 +182,11 @@ namespace RPG_Colaborate
                     
                     cout << "🤢 怪物 [" << name << "] 毒發攻心！\n";
                     this->takeDamage(poisonDamage);
+                    // 🛡️ 防禦性程式碼：如果怪物被毒死了，立刻結束該怪物的狀態結算，防止迭代器崩潰
+                    if (!this->isAlive()) {
+                        StatusEffectList.clear(); // 直接清空（因為死人不需要狀態了）
+                        break; // 震碎迴圈，安全退出
+                    }
                 }
             }
 

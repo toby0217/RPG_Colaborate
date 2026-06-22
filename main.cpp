@@ -1,6 +1,8 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <cstdlib>
+#include <ctime>
 #include "Player.h"
 #include "Skill.h"
 #include "Item.h"
@@ -24,6 +26,7 @@ using namespace RPG_Colaborate;
 
 int main()
 {
+    srand(time(NULL));
     // 🎯 修正：改成指標向量，防止物件切片 (Object Slicing)，確保多型運作
     vector<Player*> players;
     
@@ -62,42 +65,42 @@ int main()
         {
         case 0:
             // Knight: High HP & DEF, No MP, Balanced ATK
-            players.push_back(new Knight(defaultName, 3210, 100, 896, 1528));
+            players.push_back(new Knight("Knight", 3210, 100, 2196, 1528));
             cout << "🛡️ " << defaultName << " has joined the party as a [Knight]!\n";
             break;
         case 1:
             // Mage: Low HP & DEF, High MP & ATK
-            players.push_back(new Mage(defaultName, 2118, 100, 1441, 889));
+            players.push_back(new Mage("Mage", 2118, 100, 2741, 889));
             cout << "🔮 " << defaultName << " has joined the party as a [Mage]!\n";
             break;
         case 2:
             // Ranger: Moderate HP & DEF, High ATK, Sustained MP
-            players.push_back(new Ranger(defaultName, 2366, 100, 1229, 653));
+            players.push_back(new Ranger("Ranger", 2366, 100, 2629, 653));
             cout << "🏹 " << defaultName << " has joined the party as a [Ranger]!\n";
             break;
         case 3:
             // Assassin: Glass-cannon burst, High ATK, Low DEF
-            players.push_back(new Assassin(defaultName, 2629, 100, 1868, 629));
+            players.push_back(new Assassin("Assassin", 2629, 100, 3318, 629));
             cout << "🥷 " << defaultName << " has joined the party as an [Assassin]!\n";
             break;
         case 4:
             // Priest: High MP, Strong recovery, Lower ATK
-            players.push_back(new Priest(defaultName, 4048, 100, 1002, 762));
+            players.push_back(new Priest("Priest", 4048, 100, 2329, 762));
             cout << "✨ " << defaultName << " has joined the party as a [Priest]!\n";
             break;
         case 5:
             // Necromancer: High MP, Balanced HP/ATK for summoning overhead
-            players.push_back(new Necromancer(defaultName, 1927, 100, 1126, 845));
+            players.push_back(new Necromancer("Necromancer", 1927, 100, 2571, 845));
             cout << "💀 " << defaultName << " has joined the party as a [Necromancer]!\n";
             break;
         case 6:
             // Bounty Hunter: Burst shotgun ATK, Balanced HP & DEF
-            players.push_back(new BountyHunter(defaultName, 2778, 100, 1074, 1149));
+            players.push_back(new BountyHunter("Bounty-Hunter", 2778, 100, 1680, 1149));
             cout << "🪙 " << defaultName << " has joined the party as a [Bounty Hunter]!\n";
             break;
         case 7:
             // Berserker: High HP, High ATK, scales aggressively with missing health
-            players.push_back(new Berserker(defaultName, 4946, 100, 1335, 447));
+            players.push_back(new Berserker("Berserker", 4946, 100, 2735, 447));
             cout << "🪓 " << defaultName << " has joined the party as a [Berserker]!\n";
             break;
         }
@@ -112,26 +115,12 @@ int main()
     cout << "⚔️ 冒險者小隊集結完畢，準備生成怪物資料庫...\n";
     cout << "========================================\n";
 
-    // 創建怪物資料庫 (作為戰場生成怪物的範本)
-    std::vector<Monster*> monsterTable;
-
-    // 參數順序：名字, 血量, 攻擊力, 獎勵金幣, 閃避率, 防禦力, 等級(Rank)
-    // 1. 小怪們 (Normal)
-    monsterTable.push_back(new Monster("Slime", 50, 10, 10, 0, 0, NORMAL));
-    monsterTable.push_back(new Monster("Goblin", 80, 10, 15, 5, 0, NORMAL));
-    monsterTable.push_back(new Monster("Goblin Warrior", 80, 10, 20, 5, 5, NORMAL));
-    monsterTable.push_back(new Monster("Skeleton", 60, 16, 25, 0, 2, NORMAL));
-
-    // 2. 精英怪們 (Elite)
-    monsterTable.push_back(new Monster("Elite Goblin Warrior", 150, 18, 50, 5, 12, ELITE));
-    monsterTable.push_back(new Monster("Death Knight", 250, 22, 100, 0, 20, ELITE));
-
-    cout << "👾 成功載入 " << monsterTable.size() << " 種怪物範本。\n";
+    
     cout << "🏹 戰場大門開啟，冒險者進入戰場！\n\n";
 
     // 戰鬥流程啟動：
     // 戰場管理員接手，內部會處理關卡(層數)推進、增益選擇、玩家與怪物的回合交替
-    BattleManager battleArena(players, monsterTable);
+    BattleManager battleArena(players);
     battleArena.startBattle();
 
     // 🎯 記憶體管理安全防線：戰鬥結束後，手動釋放 new 出來的動態記憶體

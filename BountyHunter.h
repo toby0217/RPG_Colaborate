@@ -17,6 +17,7 @@ namespace RPG_Colaborate {
 
     class BountyHunter : public Player {
     private:
+        int bountyAtkBonus;
         int redBulletCount;       // 儲存的紅色子彈數量
         int blueBulletCount;      // 儲存的藍色子彈數量
         int consumedMpForGold;    // 紀錄施放三技時所消耗的魔力（用來計算金色子彈的追加傷害）
@@ -25,6 +26,9 @@ namespace RPG_Colaborate {
         BountyHunter();
         BountyHunter(string theName, int theMaxHp, int theMaxMp, int theAttackPower, int theDefense);
         virtual ~BountyHunter() = default;
+
+        void addBountyGold(int gold) override;
+        int getAttackPower() const override;
 
         // 覆寫父類別 Player 的虛擬函式
         void attack(int targetIndex, vector<Monster*>& monsters, vector<Player*>& players) override;

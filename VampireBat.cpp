@@ -4,11 +4,10 @@
 
 namespace RPG_Colaborate{
     VampireBat::VampireBat():
-    Monster("VampireBat",100,10,10,0,0,MonsterRank::NORMAL){}
+    Monster("VampireBat",100,10,10,0,0,NORMAL){}
 
     VampireBat::VampireBat(const string& name,int hp,int attackPower,int rewardGold):
-    Monster(name,hp,attackPower,rewardGold,20,0,MonsterRank::NORMAL){}
-    //不用填閃避、護甲和等級的建構子，也許有用，沒用可以直接刪了
+    Monster(name,hp,attackPower,rewardGold,20,0,NORMAL){}
 
     VampireBat::VampireBat(const string& name,int hp,int attackPower,int rewardGold,int evadeRate,int defense,MonsterRank rank):
     Monster(name,hp,attackPower,rewardGold,evadeRate,defense,rank){}

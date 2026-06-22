@@ -9,7 +9,7 @@ using std::cout;
 using std::endl;
 
 namespace RPG_Colaborate {
-    BountyHunter::BountyHunter() : Player(), redBulletCount(0), blueBulletCount(0), consumedMpForGold(0) {
+    BountyHunter::BountyHunter() : Player(), bountyAtkBonus(0),  redBulletCount(0), blueBulletCount(0), consumedMpForGold(0) {
         job = "Bounty Hunter";
         skillbox[0] = new Skill("Crimson Trigger", OWN, NONEH, NONEE, 0,
             NONE, NONE, NONE, NONE, NONE, NONE, SPECIAL, attackPower, 0, 0, 20, 0, 0);
@@ -20,7 +20,7 @@ namespace RPG_Colaborate {
     }
 
     BountyHunter::BountyHunter(string theName, int theMaxHp, int theMaxMp, int theAttackPower, int theDefense)
-    : Player(theName, theMaxHp, theMaxMp, theAttackPower, theDefense), redBulletCount(0), blueBulletCount(0), consumedMpForGold(0) {
+    : Player(theName, theMaxHp, theMaxMp, theAttackPower, theDefense), bountyAtkBonus(0), redBulletCount(0), blueBulletCount(0), consumedMpForGold(0) {
         job = "Bounty Hunter";
         skillbox[0] = new Skill("Crimson Trigger", OWN, NONEH, NONEE, 0,
             NONE, NONE, NONE, NONE, NONE, NONE, SPECIAL, attackPower, 0, 0, 20, 0, 0);
@@ -30,11 +30,45 @@ namespace RPG_Colaborate {
             NONE, STATIC, NONE, NONE, NONE, NONE, SPECIAL, attackPower, 0, 0, 0, 0, 4);
     }
 
-    // (帶參數的 Constructor 略，與上方邏輯相同)
+    void BountyHunter::addBountyGold(int gold) {
+        ownedGolds += gold;
+        if (ownedGolds > 0) {
+            bountyAtkBonus = ownedGolds * 10;
+            if (ownedGolds >= 300) {
+                bountyAtkBonus = 3000;
+            }
+        }
+        else {
+            bountyAtkBonus = 0;
+        }
+    }
+
+    int BountyHunter::getAttackPower() const
+    {
+        int finalAtk = attackPower + bountyAtkBonus;
+
+        double strengthRate = 1;
+        // 🎯 核心攔截：如果身上有牧師的增傷 Buff
+        if (getEffectTurns(STRENGTH) > 0) {
+            strengthRate += 0.3;
+        }
+        if (getEffectTurns(FLOOR_STRENGTH) > 0) {
+            strengthRate += 0.5;
+        }
+
+        return static_cast<int>(finalAtk * strengthRate);
+    }
 
     // 覆寫普攻：霰彈槍 5 段傷害
     void BountyHunter::attack(int targetIndex, vector<Monster*>& monsters, vector<Player*>& players) {
         cout << name << " pulls out the Shotgun and fires a 5-round burst!" << endl;
+
+        int multiplier = 1;
+        if (getEffectTurns(LAST_GASP) > 0) {
+            multiplier = 4;
+            takeEffect(LAST_GASP, 0); // ⚡ The moment the attack is unleashed, the status is immediately cleared!
+            cout << "🩸 The Last Gasp effect has been released with the attack, status removed.\n";
+        }
 
         for (int i = 0; i < 5; i++) {
             // 索敵邏輯：前三段打主目標，後兩段打隨機目標
@@ -78,6 +112,7 @@ namespace RPG_Colaborate {
             else {
                 cout << "  ⚪ [Normal Bullet] ";
             }
+            finalDamage *= multiplier;
 
             cout << "hits " << target->getName() << "!" << endl;
             target->takeDamage(finalDamage);

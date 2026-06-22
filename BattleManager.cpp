@@ -3,8 +3,17 @@
 #include "Skill.h"
 #include "Item.h"
 #include "Monster.h"
+
+// 🚀 在 .cpp 自由引入所有衍生的特殊怪物標頭檔，絕對不會引發循環引用！
+#include "VampireBat.h"
+#include "BlazeShaman.h"
+#include "SkeletonMasterSergeant.h"
+#include "FrostSlime.h"
+#include "TheDeceiver.h"
+
 #include <iostream>
-#include <cstdlib> // 用於 rand() 隨機索敵
+#include <cstdlib>
+#include <algorithm>
 
 using std::cin;
 using std::cout;
@@ -14,70 +23,199 @@ using std::string;
 
 namespace RPG_Colaborate
 {
-    BattleManager::BattleManager(vector<Player*> AllPlayers, vector<Monster*> AllMonsters)
-    : players(AllPlayers), monsters(AllMonsters) {}
-    void BattleManager::renderUI()
+    // ... BattleManager 的其他函式實作 (startBattle, renderUI 等) 維持不變 ...
+
+    // 🎯 關鍵改動：將工廠的實作移到這裡！此時編譯器已經完整認識所有怪物類別了
+    vector<Monster*> MonsterFactory::createStageMonsters(int stageLevel) {
+        vector<Monster*> stageMonsters(5, nullptr);
+            if (stageLevel < 1 || stageLevel > 10) return stageMonsters;
+
+            const auto& layout = STAGE_DATABASE[stageLevel - 1];
+            for (int i = 0; i < 5; i++) {
+                switch (layout[i]) {
+                    case NONEM:     stageMonsters[i] = nullptr; break;
+                    // 無技能小怪 (Base Monster) - 名字，血，攻擊，賞金，閃避，防禦，等級
+                    case SLIME:     stageMonsters[i] = new Monster("Slime", 1893, 761, 10, 0, 243, NORMAL); break;
+                    case GOBLIN:    stageMonsters[i] = new Monster("Goblin", 1929, 828, 10, 0, 243, NORMAL); break;
+                    case GOBLIN_W:  stageMonsters[i] = new Monster("Goblin Warrior", 6602, 1647, 20, 0, 365, NORMAL); break;
+                    case ELITE_G:   stageMonsters[i] = new Monster("Elite Goblin Warrior", 12024, 2334, 50, 0, 730, ELITE); break;
+                    case SKELETON:  stageMonsters[i] = new Monster("Skeleton", 1665, 1419, 10, 15, 243, NORMAL); break;
+                    case DK:        stageMonsters[i] = new Monster("Death Knight", 39629, 3038, 50, 0, 1228, ELITE); break;
+                    // 衍生特殊怪物 (Derived Monster)
+                    case BAT:       stageMonsters[i] = new VampireBat("Vampire Bat", 2718, 1120, 25, 20, 243, NORMAL); break;
+                    case SHAMAN:    stageMonsters[i] = new BlazeShaman("Blaze Shaman", 5739, 1493, 30, 0, 243, NORMAL); break;
+                    case SERGEANT:  stageMonsters[i] = new SkeletonMasterSergeant("Skeleton Master Sergeant", 50058, 3627, 70, 0, 779, ELITE); break;
+                    case ICE_SLIME: stageMonsters[i] = new FrostSlime("Frost Slime", 7881, 1004, 30, 0, 365, NORMAL); break;
+                    case DECEIVER:  stageMonsters[i] = new TheDeceiver("The Deceiver", 96615, 4267, 100, 30, 930, BOSS); break;
+                }
+            }
+            return stageMonsters;
+    }
+
+    BattleManager::BattleManager(vector<Player*> AllPlayers)
+    : players(AllPlayers) {}
+
+    // 🆕 脫戰道具使用階段
+    void BattleManager::preBattlePhase() {
+        cout << "\n=== 🏕️ Pre-Battle Phase ===\n"; // === 戰前準備階段 ===
+        char choice;
+        do {
+            cout << "Do you want to use an Out-of-Combat item? (y/n)\n> "; // 是否使用脫戰道具？(y/n)
+            cin >> choice;
+            if (choice == 'y' || choice == 'Y') {
+                int playerIdx, itemCode;
+                cout << "Select Player (0-" << players.size() - 1 << "):\n> "; // 選擇玩家
+                cin >> playerIdx;
+                
+                if (playerIdx >= 0 && playerIdx < players.size() && players[playerIdx]->isAlive()) {
+                    cout << "Select Item: [1] Strength Potion [2] Calamity Potion (etc...)\n> "; // 選擇道具：[1]力量藥水 [2]災厄藥水 等...
+                    cin >> itemCode;
+                    // TODO: 呼叫玩家的脫戰道具使用邏輯，例如：
+                    // players[playerIdx]->useOutOfCombatItem(itemCode);
+                    cout << "🎒 Item used successfully!\n"; // 道具使用成功！
+                } else {
+                    cout << "❌ Invalid player selection.\n"; // 無效的玩家選擇
+                }
+            }
+        } while (choice == 'y' || choice == 'Y');
+        cout << "--------------------------------\n";
+    }
+
+    // UI：交錯排版 (新增 activePlayerIdx 標記當前行動玩家)
+    void BattleManager::renderUI(int activePlayerIdx)
     {
         cout << "=================================================================\n";
-        for (int i = 0; i < players.size(); i++) {
-            // 第一行：基本數值與鎖定箭頭
-            cout << "[" << players[i]->getJob() << "] " << players[i]->getName() 
-                << " HP:" << players[i]->getHp() << "/" << players[i]->getMaxHp() 
-                << " MP:" << players[i]->getMp() << "/" << players[i]->getMaxMp();
+        
+        int totalRows = std::max(static_cast<int>(players.size()), static_cast<int>(monsters.size()));
+        
+        for (int i = 0; i < totalRows; i++) {
+            // 1. 輸出玩家（靠左）- 根據 activePlayerIdx 加上行動標記
+            if (i < players.size()) {
+                // 如果是當前回合玩家，加上 "==> " 標記；其餘補 4 個空白維持排版對齊
+                string pArrow = (i == activePlayerIdx) ? "==> " : "    ";
+                
+                cout << pArrow << "👤 [" << players[i]->getJob() << "] " << players[i]->getName() 
+                     << " HP:" << players[i]->getHp() << "/" << players[i]->getMaxHp() 
+                     << " MP:" << players[i]->getMp() << "/" << players[i]->getMaxMp()
+                     << " | Buff/Debuff: [...] \n";
+            }
             
-            cout << "      "; // 中間排版空格
-            
-            if (i < monsters.size() && monsters[i]->isAlive()) {
+            // 2. 輸出怪物（加上 Tab 縮排，製造交錯感）
+            if (i < monsters.size()) {
+                cout << "\t\t\t\t"; // 關鍵縮排，將怪物往右推
                 string arrow = (i == currentTargetIdx) ? "==> " : "    ";
-                cout << arrow << monsters[i]->getName() 
-                    << " HP:" << monsters[i]->getHp() << "/" << monsters[i]->getMaxHp();
+                cout << arrow;
+                
+                if (monsters[i] == nullptr) {
+                    cout << "💀 [Pos " << i + 1 << ": -- Empty --]\n";
+                } else if (!monsters[i]->isAlive()) {
+                    cout << "🪦 [" << monsters[i]->getName() << " Defeated]\n";
+                } else {
+                    cout << "👹 " << monsters[i]->getName() 
+                         << " HP:" << monsters[i]->getHp() << "/" << monsters[i]->getMaxHp()
+                         << " | Buff:[" << monsters[i]->getBuffs() << "] Debuff:[" << monsters[i]->getDebuffs() << "]\n";
+                }
             }
-            cout << "\n";
-            
-            // 第二行：狀態顯示區
-            cout << "Buff/Debuff: ";
-            // 這裡可以呼叫你之後要實作的狀態顯示，先留空
-            
-            cout << "               "; // 中間排版空格
-            
-            if (i < monsters.size() && monsters[i]->isAlive()) {
-                cout << "Buff:[" << monsters[i]->getBuffs() << "] Debuff:[" << monsters[i]->getDebuffs() << "]";
-            }
-            cout << "\n-----------------------------------------------------------------\n";
+            cout << "-----------------------------------------------------------------\n";
         }
     }
 
-    // 核心主迴圈：控制整場戰鬥直到分出勝負
     void BattleManager::startBattle() {
-        cout << "⚔️ 戰鬥開始！ ⚔️\n";
+        cout << "⚔️ Campaign Started! ⚔️\n"; // 遠征正式開始！
         
-        while (isBattleOver() == 0) { // 假設 0:進行中, 1:玩家勝利, 2:怪物勝利
-            cout << "\n=== ✨ 全新輪次開始 ===" << endl;
+        // 🚀 核心改動：將所有戰鬥內容包進層數迴圈中 (從第 1 層到最大層數)
+        for (size_t stage = 1; stage <= STAGE_DATABASE.size(); stage++) {
+            cout << "\n===================================================\n";
+            cout << "🏰 [STAGE " << stage << "] Entrance Detected!\n"; // 偵測到第 X 層入口！
+            cout << "===================================================\n";
 
-            // 1. 玩家行動階段 (Player Phase)
-            for (int i = 0; i < players.size(); i++) {
-                if (players[i]->isAlive()) {
-                    // 控場檢查：如果被冰凍(FREEZE)，直接跳過該玩家
-                    if (players[i]->getEffectTurns(FREEZE) > 0) {
-                        cout << "❄️ [" << players[i]->getName() << "] 被冰凍了，無法行動！\n";
-                        continue;
+            // 1. 每一層先做脫戰行為 (Pre-Battle Phase for Out-of-Combat items)
+            preBattlePhase();
+
+            // 2. 用怪物工廠設定目前層數的怪物陣列 (Initialize monster array via Factory)
+            cout << "👾 Spawning monsters for Stage " << stage << "...\n"; // 正在生成第 X 層的怪物……
+            monsters = MonsterFactory::createStageMonsters(stage);
+            
+            // 戰鬥開始時，自動鎖定當前層數第一個活著且非空的怪物
+            autoLockFirstTarget();
+            
+            // 3. 進行戰鬥行為迴圈 (Battle Loop for the current stage)
+            while (isBattleOver() == 0) { 
+                cout << "\n=== ✨ New Round Begins ===" << endl;
+
+                // 🎯 初始化：預設所有人這輪都還沒被「點名」
+                playerTurnReached.assign(players.size(), false);
+                monsterTurnReached.assign(monsters.size(), false);
+
+                bool battleEndedEarly = false;
+
+                // 玩家行動階段
+                for (int i = 0; i < players.size(); i++) {
+                    if (players[i]->isAlive()) {
+                        playerTurnReached[i] = true; // 🎯 輪到他了！(不管有沒有被控)
+
+                        // 檢查控場：被控就跳過輸入，但「輪次抵達」已成事實
+                        if (players[i]->getEffectTurns(FREEZE) > 0) {
+                            cout << "❄️ [" << players[i]->getName() << "] is frozen and skipped!\n"; 
+                            continue; 
+                        } else if (players[i]->getEffectTurns(ELETRICSHOCK) > 0) {
+                            cout << "⚡ [" << players[i]->getName() << "] is paralyzed and skipped!\n"; 
+                            continue; 
+                        }
+                        
+                        playerTurn(*players[i], i); // 正常執行轉輪、出招
                     }
-                    playerTurn(*players[i], i); // 傳入當前玩家與其索引
+
+                    // 🎯 核心情境：如果前幾個角色把怪滅了
+                    if (isBattleOver() != 0) {
+                        battleEndedEarly = true;
+                        break; // 跳出玩家循環
+                    }
                 }
-                if (isBattleOver() != 0) break;
+
+                // 🎯 如果怪被滅了/玩家全滅，直接進結算（確保沒點名的人扣到 CD），然後退出戰鬥
+                if (battleEndedEarly) {
+                    endOfRoundCleanup();
+                    break; 
+                }
+
+                // 怪物行動階段
+                monsterPhase();
+
+                // 正常走完一整輪的結算
+                endOfRoundCleanup();
             }
 
-            if (isBattleOver() != 0) break;
-
-            // 2. 怪物行動階段 (Monster Phase)
-            monsterPhase();
-
-            // 3. 輪次結束結算階段 (End of Round)
-            endOfRoundCleanup();
+            // 4. 層數勝負結算與記憶體清理 (Stage Result Evaluation & Memory Cleanup)
+            if (isBattleOver() == 1) {
+                cout << "\n🎉 Stage " << stage << " Cleared successfully!\n"; // 恭喜通關第 X 層！
+                
+                // 🚨 預防記憶體洩漏：通關後必須釋放工廠 new 出來的怪物物件
+                for (auto* monsterPtr : monsters) {
+                    if (monsterPtr != nullptr) {
+                        delete monsterPtr; // 釋放記憶體
+                    }
+                }
+                monsters.clear(); // 清空容器，準備迎接下一層的新怪
+                
+                cout << "Press Enter to proceed to the next stage...\n"; // 按下 Enter 鍵前進到下一層……
+                cin.get(); cin.ignore(); // 暫停一下讓玩家看清通關訊息
+            } 
+            else if (isBattleOver() == 2) {
+                cout << "💀 The Player Party has been wiped out on Stage " << stage << "... GAME OVER\n"; // 玩家小隊在第 X 層全軍覆沒…… GAME OVER
+                
+                // 🚨 失敗時同樣做好記憶體清理
+                for (auto* monsterPtr : monsters) {
+                    if (monsterPtr != nullptr) delete monsterPtr;
+                }
+                return; // 直接結束整個 startBattle()，終止遊戲
+            }
         }
 
-        if (isBattleOver() == 1) cout << "🏆 玩家小隊獲得勝利！\n";
-        else cout << "💀 玩家小隊全軍覆沒…… GAME OVER\n";
+        // 🏆 成功爬完所有層數的終極勝利宣告
+        cout << "\n===================================================\n";
+        cout << "🏆 Congratulations! You have conquered the entire Dungeon!\n"; // 恭喜！你征服了整座地下城！
+        cout << "===================================================\n";
     }
 
     void BattleManager::playerTurn(Player& currentPlayer, int currentPlayerIdx) {
@@ -85,159 +223,169 @@ namespace RPG_Colaborate
     
         do 
         {
-            // 在普攻或放技能前加入活體檢查
-            while (!monsters[currentTargetIdx]->isAlive()) {
+            while (monsters[currentTargetIdx] == nullptr || !monsters[currentTargetIdx]->isAlive()) {
                 currentTargetIdx = (currentTargetIdx + 1) % monsters.size();
             }
             
-            renderUI();
+            // 🎯 關鍵改動：將目前輪到的玩家索引傳入 renderUI
+            renderUI(currentPlayerIdx);
 
             char choice;
-            cout << "[" << currentPlayer.getName() << "] 的回合。選擇行動: [A]普攻 [1~3]技能 [I]道具 [T]切換目標\n> ";
+            cout << "[" << currentPlayer.getName() << "]'s Turn. Action: [A]Attack [1~3]Skill [I]Item [T]Switch Target\n> ";
             cin >> choice;
 
             if (choice == 'a' || choice == 'A') {
-                // STRENGTH 狀態：建議在 Player::attack 內部去檢查 getEffectTurns(STRENGTH)
-                // 若大於 0，則將基礎攻擊力乘以傷害加成係數，計算出最終傷害
                 currentPlayer.attack(currentTargetIdx, monsters, players);
                 actionCompleted = true; 
             }
             else if (choice == '1' || choice == '2' || choice == '3') {
                 int skillIdx = choice - '0';
-                // 這裡 useSkill 會回傳 bool，決定是否消耗非自由行動回合
                 actionCompleted = currentPlayer.useSkill(skillIdx, currentTargetIdx, players, monsters); 
             }
             else if (choice == 'i' || choice == 'I') {
-                cout << "請輸入要使用的道具代碼: ";
+                cout << "Enter the item code to use: \n";
+                cout << "[1] Scorching Sun  [2] Golden Bell  [3] Wrath of Thor  [4] The Last Gasp\n> ";
                 int itemCode;
                 cin >> itemCode;
-                currentPlayer.useItem(itemCode);
-                actionCompleted = false; // 使用道具不消耗回合
+                
+                currentPlayer.useItem(itemCode, players, monsters);
+                actionCompleted = false; 
             }
             else if (choice == 't' || choice == 'T') {
-                do {
-                    currentTargetIdx = (currentTargetIdx + 1) % monsters.size();
-                } while (!monsters[currentTargetIdx]->isAlive()); 
-                actionCompleted = false; // 切換鎖定不消耗回合
+                switchTarget(); 
+                actionCompleted = false; 
             }
             else {
-                cout << "輸入錯誤！請重新輸入。\n";
+                cout << "❌ Invalid input! Please try again.\n";
                 actionCompleted = false;
             }
 
-            // 🎯 【FREEACTION 攔截點】：作用在回合即將結束前
             if (actionCompleted) {
                 if (currentPlayer.getEffectTurns(FREEACTION) > 0) {
-                    cout << "⚡ [" << currentPlayer.getName() << "] 觸發了『自由行動』！獲得額外連擊回合！\n";
-                    // 減少或移除 FREEACTION 狀態
-                    currentPlayer.takeEffect(FREEACTION, currentPlayer.getEffectTurns(FREEACTION)-1);
-
-                    actionCompleted = false; // 關鍵：強行重置為 false，利用 do-while 重新回到選單開頭！
+                    cout << "⚡ [" << currentPlayer.getName() << "] triggered 'Free Action'! Gained an extra combo turn!\n";
+                    currentPlayer.takeEffect(FREEACTION, currentPlayer.getEffectTurns(FREEACTION) - 1);
+                    actionCompleted = false; 
                 }
             }
 
         } while (!actionCompleted);
     }
 
-    // 怪物行動階段與索敵邏輯
+    void BattleManager::autoLockFirstTarget() {
+        for (int i = 0; i < monsters.size(); i++) {
+            if (monsters[i] != nullptr && monsters[i]->isAlive()) {
+                currentTargetIdx = i;
+                break; 
+            }
+        }
+    }
+
+    void BattleManager::switchTarget() {
+        int startIdx = currentTargetIdx;
+        do {
+            currentTargetIdx = (currentTargetIdx + 1) % monsters.size(); 
+            if (monsters[currentTargetIdx] != nullptr && monsters[currentTargetIdx]->isAlive()) {
+                return; 
+            }
+        } while (currentTargetIdx != startIdx); 
+    }
+
     void BattleManager::monsterPhase() {
-        cout << "\n=== 👾 怪物行動階段 ===" << endl;
+        cout << "\n=== 👾 Monster Phase ===\n"; 
         
         for (int i = 0; i < monsters.size(); i++) {
-            if (!monsters[i]->isAlive()) continue;
+            if (monsters[i] == nullptr || !monsters[i]->isAlive()) continue;
 
-            // 控場檢查：如果怪物被冰凍(FREEZE)，跳過
-            if (monsters[i]->getEffectTurns(FREEZE) > 0) {
-                cout << "❄️ 怪物 [" << monsters[i]->getName() << "] 處於冰凍狀態，跳過回合。\n";
-                continue;
+            monsterTurnReached[i] = true; // 🎯 輪到這隻怪物了！
+
+            if (monsters[i]->getEffectTurns(FREEZE) > 0 || monsters[i]->getEffectTurns(ELETRICSHOCK) > 0) {
+                cout << "❄️⚡ [" << monsters[i]->getName() << "] is crowd-controlled and skipped!\n"; 
+                continue; 
             }
 
-            // 🎯 【HIDE 索敵攔截點】：尋找合法的玩家目標
             int targetPlayerIdx = getValidMonsterTarget();
-            if (targetPlayerIdx == -1) return; // 沒有活著的目標
+            if (targetPlayerIdx == -1) return; 
 
-            cout << "👹 [" << monsters[i]->getName() << "] 瞄準了 [" << players[targetPlayerIdx]->getName() << "]!\n";
-
-            // 怪物發動攻擊，造成傷害
             monsters[i]->attack(targetPlayerIdx, players, monsters);
         }
     }
 
-    // 索敵輔助函式：排除死者與擁有 HIDE 狀態的刺客
     int BattleManager::getValidMonsterTarget() {
-        // 🎯 【TAUNT 優先權攔截】：如果有人開嘲諷，怪物眼睛裡就只有他！
         for (int i = 0; i < players.size(); i++) {
             if (players[i]->isAlive() && players[i]->getEffectTurns(TAUNT) > 0) {
-                return i; // 直接回傳騎士的索引，後面的 HIDE 和隨機都不用看了
+                return i; 
             }
         }
 
         vector<int> normalTargets;
-        vector<int> hiddenTargets; // 備用：若大家都隱身，怪物還是得打人
+        vector<int> hiddenTargets; 
 
         for (int i = 0; i < players.size(); i++) {
             if (!players[i]->isAlive()) continue;
 
             if (players[i]->getEffectTurns(HIDE) > 0) {
-                hiddenTargets.push_back(i); // 隱身者先放進備用清單
+                hiddenTargets.push_back(i); 
             } else {
-                normalTargets.push_back(i); // 正常可被鎖定的目標
+                normalTargets.push_back(i); 
             }
         }
 
-        // 優先從沒隱身的活人裡隨機選一個
         if (!normalTargets.empty()) {
             return normalTargets[rand() % normalTargets.size()];
         }
-        // 如果全部活著的人都處於 HIDE 隱身狀態或全隊陣亡，怪物失去目標，跳過回合
-        cout << "" << endl;
+        
+        if (!hiddenTargets.empty()) {
+            return hiddenTargets[rand() % hiddenTargets.size()];
+        }
+
         return -1;
     }
 
-    // 3. 輪次結束結算階段：遞減狀態、結算持續傷害
     void BattleManager::endOfRoundCleanup() {
-        cout << "\n--- 回合結束結算 ---" << endl;
+        cout << "\n--- End of Round Cleanup ---\n"; 
 
-        // 玩家狀態遞減與檢查（例如騎士的 PERSEVERANCE）
-        for (auto& player : players) {
-            if (!player->isAlive()) continue;
+        // 1. 玩家結算
+        for (int i = 0; i < players.size(); i++) {
+            if (!players[i]->isAlive()) continue;
             
-            // 🎯 【PERSEVERANCE 攔截點】：
-            // 在每輪結束時，呼叫狀態更新更新剩餘回合。
-            // 只要在狀態管理內設定：當計數歸零時，將該狀態從 map 中 erase 移除即可。
-            player->updateStatusEffects(); 
-            player->restoreMp(15);
+            // ⏳ 【狀態結算】只有「確實輪到他」的人，才進行狀態流逝
+            if (playerTurnReached[i]) {
+                players[i]->updateStatusEffects(); 
+            } else {
+                cout << "💤 [" << players[i]->getName() << "] Turn not reached. Status preserved.\n";
+            }
+            
+            // 🎯 【技能 CD 減免】檢查點！只要活著，全體無條件享受 -cd
+            players[i]->reduceCooldowns(); 
+            
+            players[i]->restoreMp(15);
         }
 
-        // 🎯 【怪物的負面狀態在回合結束時減少一回合】 + 毒燒持續傷害結算
-        for (auto& monster : monsters) {
-            if (!monster->isAlive()) continue;
-
-            // 結算持續傷害 (BURN / POISON)
-            /*if (monster->getEffectTurns(BURN) > 0) {
-                cout << "🔥 [" << monster->getName() << "] 受到燃燒傷害！\n";
-                monster->takeDamage(20); // 舉例傷害
+        // 2. 怪物結算
+        for (int i = 0; i < monsters.size(); i++) {
+            if (monsters[i] == nullptr || !monsters[i]->isAlive()) continue;
+            
+            // ⏳ 怪物同樣只有輪到的才結算狀態
+            if (monsterTurnReached[i]) {
+                monsters[i]->updateStatusEffects();
             }
-            if (monster->getEffectTurns(POISON) > 0) {
-                cout << "🤢 [" << monster->getName() << "] 受到中毒毒發傷害！\n";
-                monster->takeDamage(15); 
-            }*/
-
-            // 令怪物身上的所有負面狀態計數器減 1 輪
-            monster->updateStatusEffects();
         }
     }
 
-    // 檢查戰鬥是否結束的輔助函式
     int BattleManager::isBattleOver() {
         bool allPlayersDead = true;
         for (auto& p : players) if (p->isAlive()) allPlayersDead = false;
-        if (allPlayersDead) return 2; // 怪物勝
+        if (allPlayersDead) return 2; 
 
         bool allMonstersDead = true;
-        for (auto& m : monsters) if (m->isAlive()) allMonstersDead = false;
-        if (allMonstersDead) return 1; // 玩家勝
+        for (auto& m : monsters) {
+            if (m != nullptr && m->isAlive()) {
+                allMonstersDead = false;
+                break; 
+            }
+        }
+        if (allMonstersDead) return 1; 
 
-        return 0; // 戰鬥繼續
+        return 0; 
     }
 }

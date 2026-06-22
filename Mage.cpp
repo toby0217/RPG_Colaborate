@@ -40,7 +40,14 @@ namespace RPG_Colaborate {
 
     // 覆寫普攻：加入擴散傷害邏輯
     void Mage::attack(int targetIndex, vector<Monster*>& monsters, vector<Player*>& players) {
-        Player::attack(targetIndex, monsters, players);
+        int damage = getAttackPower();
+        if (getEffectTurns(LAST_GASP) > 0) {
+            damage *= 4;
+            takeEffect(LAST_GASP, 0); // ⚡ The moment the attack is unleashed, the status is immediately cleared!
+            cout << "🩸 The Last Gasp effect has been released with the attack, status removed.\n";
+        }
+        cout << name << " performs a basic attack!" << endl;
+        monsters[targetIndex]->takeDamage(damage);
 
         // 搜尋左側存活目標
         int leftTargetIndex = targetIndex - 1;
@@ -49,7 +56,7 @@ namespace RPG_Colaborate {
         }
         if (leftTargetIndex >= 0) {
             cout << "Magic splashes onto " << monsters[leftTargetIndex]->getName() << "!" << endl;
-            monsters[leftTargetIndex]->takeDamage(round(0.5 * getAttackPower()));
+            monsters[leftTargetIndex]->takeDamage(round(0.5 * damage));
         }
 
         // 搜尋右側存活目標
@@ -59,7 +66,7 @@ namespace RPG_Colaborate {
         }
         if (rightTargetIndex < monsters.size()) {
             cout << "Magic splashes onto " << monsters[rightTargetIndex]->getName() << "!" << endl;
-            monsters[rightTargetIndex]->takeDamage(round(0.5 * getAttackPower()));
+            monsters[rightTargetIndex]->takeDamage(round(0.5 * damage));
         }
     }
 
@@ -69,6 +76,11 @@ namespace RPG_Colaborate {
         int skillNumber = skillInput - 1;
         if (skillNumber < 0 || skillNumber >= 3 || skillbox[skillNumber] == nullptr) {
             cout << "The skill does not exist." << endl;
+            return false;
+        }
+
+        if (skillbox[skillNumber]->getCurrentCD() > 0) {
+            cout << "The skill is still in CD!" << endl;
             return false;
         }
 

@@ -8,6 +8,10 @@ namespace RPG_Colaborate {
         : Monster("Blaze Shaman", 100, 14, 35, 0, 3, NORMAL) {
     }
 
+    BlazeShaman::BlazeShaman(const string& name,int hp,int attackPower,int rewardGold,int evadeRate,int defense,MonsterRank rank):
+    Monster(name,hp,attackPower,rewardGold,evadeRate,defense,rank){}
+    //完整建構子
+
     void BlazeShaman::aoeBurnSkill(std::vector<Player*>& players) {
         std::cout << "🔥 " << getName() << " cast 【Blaze Storm】!" << std::endl;
         

@@ -80,6 +80,11 @@ namespace RPG_Colaborate
 
         // 技能有傷害:依照類型進行索敵
         if (isDamage == DAMAGE) {
+            if (user.getEffectTurns(LAST_GASP) > 0) {
+                damage *= 4;
+                user.takeEffect(LAST_GASP, 0); // ⚡ The moment the attack is unleashed, the status is immediately cleared!
+                cout << "🩸 The Last Gasp effect has been released with the attack, status removed.\n";
+            }
             switch (targetType)
             {
             case SINGLE:
