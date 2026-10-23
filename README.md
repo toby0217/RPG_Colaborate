@@ -53,8 +53,9 @@ FrostSlime.cpp TheDeceiver.cpp -o RPG_Game
 
 # 2. 執行遊戲
 ./RPG_Game
+```
 
-👥 團隊開發成員 (Contributors)
+### 👥 團隊開發成員 (Contributors)
 1. 孫逸明
 
 2. 宋金日
